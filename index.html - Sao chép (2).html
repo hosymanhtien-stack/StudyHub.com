@@ -442,7 +442,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 </div>
 
 <!-- ══════════ REGISTER / PENDING ══════════ -->
-<div class="register-page" id="registerPage">
+<div class="register-page" id="registerPage" style="display:none">
   <div class="register-card">
     <div class="login-logo" style="margin-bottom:8px">
       <div class="dot-row"><div class="dot" style="background:var(--acc1)"></div><div class="dot" style="background:var(--acc2)"></div><div class="dot" style="background:var(--acc3)"></div></div>
@@ -458,7 +458,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
       <div class="login-err" id="regErr" style="margin-bottom:12px">❌ Vui lòng nhập họ tên!</div>
       <button class="login-btn" onclick="submitRegister()" style="margin-top:4px">✓ Hoàn tất đăng ký</button>
-      <div class="login-hint" style="margin-top:14px">Sau khi đăng ký, quản trị viên sẽ phê duyệt tài khoản và mở khóa môn học cho bạn.</div>
+      <div class="login-hint" style="margin-top:14px">Sau khi đăng ký, bạn sẽ vào giao diện học ngay. Quản trị viên sẽ mở khóa môn học cho bạn.</div>
     </div>
 
     <div id="regPendingArea" style="display:none;text-align:center">
@@ -1932,12 +1932,18 @@ function showScreen(name){
   document.getElementById('fbLoading').classList.add('hidden');
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('registerPage').classList.remove('show');
+  document.getElementById('registerPage').style.display = 'none';
   document.getElementById('adminPage').classList.remove('show');
   document.getElementById('app').classList.remove('show');
-  if(name==='login')    document.getElementById('loginPage').classList.remove('hidden');
-  if(name==='register') document.getElementById('registerPage').classList.add('show');
-  if(name==='admin')    document.getElementById('adminPage').classList.add('show');
-  if(name==='app')      document.getElementById('app').classList.add('show');
+  if(name==='login'){
+    document.getElementById('loginPage').classList.remove('hidden');
+  }
+  if(name==='register'){
+    document.getElementById('registerPage').style.display = 'flex';
+    document.getElementById('registerPage').classList.add('show');
+  }
+  if(name==='admin') document.getElementById('adminPage').classList.add('show');
+  if(name==='app')   document.getElementById('app').classList.add('show');
 }
 
 // ═══════════════════════════════════════
