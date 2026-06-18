@@ -408,6 +408,83 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .toast.err{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.08)}
 @keyframes toastIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
 
+/* ═══════════════════════════════════════
+   CHAT SYSTEM
+═══════════════════════════════════════ */
+
+/* Floating chat button (student topnav) */
+.chat-fab-btn{position:relative;width:38px;height:38px;border-radius:50%;background:var(--card);border:1.5px solid var(--border);color:var(--text);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chat-fab-btn:hover{border-color:var(--acc1);background:rgba(99,102,241,.12);transform:translateY(-1px)}
+.chat-unread-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:10px;font-weight:800;min-width:17px;height:17px;border-radius:9px;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid var(--bg);animation:badgePop .3s ease}
+@keyframes badgePop{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+
+/* Chat overlay + panel (student) */
+.chat-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:none;align-items:flex-end;justify-content:flex-end;padding:0;backdrop-filter:blur(2px)}
+.chat-overlay.show{display:flex;animation:fadeUp .2s ease}
+.chat-panel{width:380px;height:560px;max-height:88vh;background:var(--card);border:1px solid var(--border);border-radius:20px 20px 0 0;display:flex;flex-direction:column;margin:0 24px 0 0;box-shadow:0 -8px 40px rgba(0,0,0,.5);overflow:hidden;animation:chatSlideUp .25s cubic-bezier(.16,1,.3,1)}
+@keyframes chatSlideUp{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+@media(max-width:480px){
+  .chat-panel{width:100%;height:100%;max-height:100vh;border-radius:0;margin:0}
+  .chat-overlay{padding:0}
+}
+
+.chat-panel-header{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-header-info{display:flex;align-items:center;gap:12px;flex:1}
+.chat-avatar-circle{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--acc1),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.chat-header-title{font-size:14px;font-weight:800;color:var(--text)}
+.chat-header-sub{font-size:11px;color:var(--green);display:flex;align-items:center;gap:5px}
+.chat-header-sub::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+.chat-close-btn{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:6px;border-radius:8px;transition:all .15s}
+.chat-close-btn:hover{background:var(--card2);color:var(--text)}
+
+.chat-messages{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+.chat-msg-row{display:flex;flex-direction:column;max-width:78%;animation:msgIn .25s ease}
+@keyframes msgIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.chat-msg-row.from-me{align-self:flex-end;align-items:flex-end}
+.chat-msg-row.from-them{align-self:flex-start;align-items:flex-start}
+.chat-bubble{padding:10px 14px;border-radius:16px;font-size:13.5px;line-height:1.5;word-wrap:break-word;white-space:pre-wrap}
+.chat-msg-row.from-me .chat-bubble{background:linear-gradient(135deg,var(--acc1),var(--acc2));color:#fff;border-radius:16px 16px 4px 16px}
+.chat-msg-row.from-them .chat-bubble{background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:16px 16px 16px 4px}
+.chat-msg-time{font-size:10px;color:var(--muted2);margin-top:4px;padding:0 4px}
+.chat-msg-sender{font-size:10.5px;color:var(--muted);font-weight:700;margin-bottom:3px;padding:0 4px}
+
+.chat-empty-state{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;color:var(--muted);padding:30px}
+.chat-empty-state .ces-icon{font-size:44px;margin-bottom:12px}
+.chat-empty-state p{font-size:13px;line-height:1.6;max-width:240px}
+
+.chat-input-area{display:flex;align-items:flex-end;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.chat-text-input{flex:1;background:var(--card);border:1.5px solid var(--border);border-radius:14px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:13px;outline:none;resize:none;max-height:100px;line-height:1.4;transition:border-color .15s}
+.chat-text-input:focus{border-color:var(--acc1)}
+.chat-send-btn{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--acc1),var(--acc2));border:none;color:#fff;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s}
+.chat-send-btn:hover{transform:scale(1.06)}
+.chat-send-btn:disabled{opacity:.4;cursor:default;transform:none}
+
+/* ─── ADMIN CHAT INBOX (2-pane layout) ─── */
+.admin-chat-layout{display:flex;height:calc(100vh - 160px);min-height:480px;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.admin-chat-list{width:280px;border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;background:var(--surface)}
+.admin-chat-list-item{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .15s;position:relative}
+.admin-chat-list-item:hover{background:var(--card2)}
+.admin-chat-list-item.active{background:rgba(99,102,241,.1);border-left:3px solid var(--acc1)}
+.acl-avatar{width:40px;height:40px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;color:var(--muted)}
+.acl-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+.acl-info{flex:1;min-width:0}
+.acl-name{font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acl-preview{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:170px}
+.acl-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0}
+.acl-time{font-size:10px;color:var(--muted2)}
+.acl-unread-dot{width:9px;height:9px;border-radius:50%;background:var(--acc1);box-shadow:0 0 6px var(--acc1)}
+.admin-chat-list-empty{padding:50px 20px;text-align:center;color:var(--muted)}
+
+.admin-chat-main{flex:1;display:flex;flex-direction:column;min-width:0}
+.admin-chat-main-header{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0}
+.admin-chat-empty-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--muted)}
+.admin-chat-empty-main .acem-icon{font-size:52px;margin-bottom:14px;opacity:.5}
+
+@media(max-width:900px){
+  .admin-chat-layout{flex-direction:column;height:auto}
+  .admin-chat-list{width:100%;max-height:240px}
+}
+
 @media(max-width:700px){
   .admin-sidebar{display:none}
   .admin-stats{grid-template-columns:repeat(2,1fr)}
@@ -421,6 +498,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
 /* ─── INTEGRATED AI CONVERTER ─── */
 .conv-step{display:flex;gap:16px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
+.provider-tabs{display:flex;gap:8px;margin-bottom:6px}
+.provider-tab{flex:1;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:12px 14px;font-family:inherit;font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.provider-tab:hover{border-color:var(--border2)}
+.provider-tab.active{border-color:#f59e0b;background:rgba(245,158,11,.08);color:var(--text)}
+.provider-tab .prov-icon{font-size:15px}
+.provider-tab .prov-free{font-size:10px;background:rgba(34,197,94,.18);color:var(--green);padding:2px 7px;border-radius:6px;font-weight:800}
+.provider-tab .prov-paid{font-size:10px;background:rgba(245,158,11,.18);color:var(--gold);padding:2px 7px;border-radius:6px;font-weight:800}
 .conv-step:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
 .conv-step-num{width:28px;height:28px;border-radius:9px;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
 .conv-step-body{flex:1;min-width:0}
@@ -525,7 +609,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <h3>Quản lý</h3>
       <button class="admin-nav-btn active" onclick="showAdminTab('overview',this)">📊 Tổng quan</button>
       <button class="admin-nav-btn" onclick="showAdminTab('students',this)">👥 Học sinh</button>
-      <button class="admin-nav-btn" onclick="showAdminTab('addStudent',this)">➕ Thêm học sinh</button>
+      <button class="admin-nav-btn" onclick="showAdminTab('chat',this)">💬 Chat <span id="adminChatBadge" style="background:#ef4444;color:#fff;border-radius:10px;padding:1px 7px;font-size:10px;margin-left:4px;display:none">0</span></button>
       <br>
       <h3 style="margin-top:16px">Môn học</h3>
       <button class="admin-nav-btn" onclick="showAdminTab('courses',this)">📚 Quản lý môn</button>
@@ -572,50 +656,6 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       </div>
 
       <!-- ADD STUDENT -->
-      <div class="admin-section" id="tab-addStudent">
-        <div class="admin-card">
-          <h2>➕ Thêm học sinh mới</h2>
-          <p>Tạo tài khoản và gán slot mật khẩu cho học sinh.</p>
-          <div class="admin-form">
-            <div class="admin-form-row">
-              <div class="admin-input-wrap">
-                <label>Họ và tên</label>
-                <input class="admin-input" id="newName" placeholder="Nguyễn Văn A…"/>
-              </div>
-              <div class="admin-input-wrap">
-                <label>Tên đăng nhập</label>
-                <input class="admin-input" id="newUser" placeholder="abchamhoc@.edu.com" value="abchamhoc@.edu.com"/>
-              </div>
-              <div class="admin-input-wrap">
-                <label>Slot mật khẩu</label>
-                <select class="admin-input" id="newSlot">
-                  <option value="">-- Chọn slot --</option>
-                  <option value="0">#1 — 123455</option>
-                  <option value="1">#2 — 234566</option>
-                  <option value="2">#3 — 345677</option>
-                  <option value="3">#4 — 456788</option>
-                  <option value="4">#5 — 567899</option>
-                </select>
-              </div>
-            </div>
-            <div class="admin-input-wrap">
-              <label>Môn học được phép truy cập</label>
-              <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px" id="newCourseCheckboxes"></div>
-            </div>
-            <div>
-              <button class="admin-btn primary" onclick="addStudent()">✓ Tạo tài khoản</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Slot status -->
-        <div class="admin-card">
-          <h2>🔑 Trạng thái Slot mật khẩu</h2>
-          <p>5 slot cố định — mỗi slot chỉ nên gán cho 1 học sinh.</p>
-          <div style="display:flex;flex-wrap:wrap;gap:10px" id="slotStatus"></div>
-        </div>
-      </div>
-
       <!-- PENDING APPROVALS -->
       <div class="admin-section" id="tab-pending">
         <div class="admin-card">
@@ -640,16 +680,39 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <h2>✨ Thêm môn học mới bằng AI</h2>
           <p>Upload file PDF/Word câu hỏi trắc nghiệm — AI sẽ tự đọc, nhận diện câu hỏi và đáp án đúng, rồi thêm thẳng vào StudyHub. Không cần công cụ ngoài.</p>
 
-          <!-- Step 1: API Key -->
+          <!-- Step 1: Provider + API Key -->
           <div class="conv-step">
             <div class="conv-step-num">1</div>
             <div class="conv-step-body">
-              <label class="conv-label">Claude API Key</label>
-              <div style="display:flex;gap:8px">
-                <input type="password" id="convApiKey" class="admin-input" placeholder="sk-ant-api03-..." style="flex:1"/>
-                <button class="admin-btn secondary" onclick="toggleConvKeyVisibility()" id="convToggleKeyBtn">👁</button>
+              <label class="conv-label">Chọn AI để phân tích</label>
+              <div class="provider-tabs">
+                <button class="provider-tab active" id="provTabGemini" onclick="selectProvider('gemini')">
+                  <span class="prov-icon">✨</span> Gemini <span class="prov-free">Miễn phí</span>
+                </button>
+                <button class="provider-tab" id="provTabClaude" onclick="selectProvider('claude')">
+                  <span class="prov-icon">🟠</span> Claude <span class="prov-paid">Trả phí</span>
+                </button>
               </div>
-              <div class="conv-hint">Key được lưu trên máy bạn, chỉ dùng để gọi AI phân tích — không lưu lên server.</div>
+
+              <div id="geminiKeyArea">
+                <label class="conv-label" style="margin-top:14px">Gemini API Key</label>
+                <div style="display:flex;gap:8px">
+                  <input type="password" id="convGeminiKey" class="admin-input" placeholder="AIza..." style="flex:1"/>
+                  <button class="admin-btn secondary" onclick="toggleKeyVis('convGeminiKey','geminiEyeBtn')" id="geminiEyeBtn">👁</button>
+                </div>
+                <div class="conv-hint">Lấy miễn phí tại <strong>aistudio.google.com/apikey</strong> — không cần thẻ tín dụng.</div>
+              </div>
+
+              <div id="claudeKeyArea" style="display:none">
+                <label class="conv-label" style="margin-top:14px">Claude API Key</label>
+                <div style="display:flex;gap:8px">
+                  <input type="password" id="convApiKey" class="admin-input" placeholder="sk-ant-api03-..." style="flex:1"/>
+                  <button class="admin-btn secondary" onclick="toggleKeyVis('convApiKey','convToggleKeyBtn')" id="convToggleKeyBtn">👁</button>
+                </div>
+                <div class="conv-hint">Cần nạp credit tại <strong>console.anthropic.com</strong> để sử dụng.</div>
+              </div>
+
+              <div class="conv-hint" style="margin-top:10px">🔒 Key được lưu trên máy bạn, chỉ dùng để gọi AI phân tích — không gửi lên server StudyHub.</div>
             </div>
           </div>
 
@@ -747,6 +810,19 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         </div>
       </div>
 
+      <!-- CHAT INBOX -->
+      <div class="admin-section" id="tab-chat">
+        <div class="admin-chat-layout">
+          <div class="admin-chat-list" id="adminChatList"></div>
+          <div class="admin-chat-main" id="adminChatMain">
+            <div class="admin-chat-empty-main">
+              <div class="acem-icon">💬</div>
+              <p>Chọn một học sinh để xem hội thoại</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- end admin-content -->
   </div><!-- end admin-body -->
 </div><!-- end admin-page -->
@@ -764,6 +840,9 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
       <button class="nav-btn" data-course="4" onclick="selectCourse(4)">🇬🇧 ENG111</button>
     </div>
     <div class="nav-right">
+      <button class="chat-fab-btn" onclick="openStudentChat()" title="Chat với StudyHub Assistant">
+        💬<span class="chat-unread-badge" id="studentChatBadge" style="display:none">0</span>
+      </button>
       <div class="user-chip"><span class="dot"></span><span id="userLabel">—</span></div>
       <button class="logout-btn" onclick="doLogout()">⎋ Thoát</button>
     </div>
@@ -771,6 +850,27 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 
   <!-- MAIN -->
   <main class="main" id="mainArea"></main>
+
+  <!-- STUDENT CHAT PANEL -->
+  <div class="chat-overlay" id="studentChatOverlay" onclick="if(event.target===this)closeStudentChat()">
+    <div class="chat-panel">
+      <div class="chat-panel-header">
+        <div class="chat-header-info">
+          <div class="chat-avatar-circle">🎓</div>
+          <div>
+            <div class="chat-header-title">StudyHub Assistant</div>
+            <div class="chat-header-sub" id="studentChatStatus">Hỗ trợ học tập</div>
+          </div>
+        </div>
+        <button class="chat-close-btn" onclick="closeStudentChat()">✕</button>
+      </div>
+      <div class="chat-messages" id="studentChatMessages"></div>
+      <div class="chat-input-area">
+        <textarea class="chat-text-input" id="studentChatInput" placeholder="Nhập tin nhắn..." rows="1" onkeydown="handleChatInputKey(event,'student')" oninput="autoGrowChatInput(this)"></textarea>
+        <button class="chat-send-btn" onclick="sendChatMessage('student')">➤</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2194,6 +2294,7 @@ function enterStudentApp(user, data, docRef){
   document.getElementById('userLabel').textContent = data.name || user.displayName;
   renderStudentNav(data);
   showScreen('app');
+  watchStudentChatBadge(user.uid);
 
   // Nếu chưa có môn nào → hiện thông báo chờ admin cấp
   if(!data.courses || data.courses.length === 0){
@@ -2331,11 +2432,11 @@ function showAdminTab(tab, btn){
   document.getElementById('tab-'+tab).classList.add('show');
   if(btn) btn.classList.add('active');
   if(tab==='students')       renderStudentTable();
-  if(tab==='addStudent')     renderAddStudentTab();
   if(tab==='courses')        renderCourseMgmt();
   if(tab==='overview')       renderOverview();
   if(tab==='pending')        renderPendingList();
   if(tab==='manageCourses')  renderCourseListAdmin();
+  if(tab==='chat')           initAdminChatInbox();
 }
 
 function initAdminPanel(){
@@ -2361,7 +2462,6 @@ function initAdminPanel(){
       renderOverview();
     }
   });
-  renderAddStudentTab();
 }
 
 function renderOverview(){
@@ -2515,31 +2615,6 @@ async function rejectStudent(uid, name){
   showToast('Đã từ chối!','ok');
 }
 
-function renderAddStudentTab(){
-  const cbArea = document.getElementById('newCourseCheckboxes');
-  if(!cbArea) return;
-  cbArea.innerHTML = COURSE_META.map((cm,i)=>`
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--surface);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;transition:all .2s" id="cb-wrap-${i}">
-      <input type="checkbox" id="cb-course-${i}" checked style="accent-color:${cm.color};width:15px;height:15px" onchange="updateCbStyle(${i})"/>
-      <span style="font-size:13px;font-weight:600">${cm.label}</span>
-    </label>`).join('');
-  COURSE_META.forEach((_,i)=>updateCbStyle(i));
-}
-
-function updateCbStyle(i){
-  const cb=document.getElementById('cb-course-'+i), wrap=document.getElementById('cb-wrap-'+i);
-  if(cb&&wrap){
-    wrap.style.borderColor=cb.checked?COURSE_META[i].color:'var(--border)';
-    wrap.style.background=cb.checked?COURSE_META[i].color+'18':'var(--surface)';
-  }
-}
-
-// Admin manually add student from Firestore (by UID or email — not used for Gmail flow,
-// but admin can pre-approve by email lookup if needed)
-function addStudent(){
-  showToast('Với hệ thống Gmail, học sinh tự đăng ký → Admin duyệt trong tab "Chờ duyệt"','ok');
-}
-
 function renderCourseMgmt(){
   const area = document.getElementById('courseMgmtArea');
   area.innerHTML = COURSE_META.map((cm,ci)=>`
@@ -2562,24 +2637,39 @@ function renderCourseMgmt(){
 
 // ═══════════════════════════════════════
 //  INTEGRATED AI COURSE CONVERTER
-//  PDF/Word/Text → Claude API → Questions → Firestore → live
+//  PDF/Word/Text → Claude or Gemini API → Questions → Firestore → live
 // ═══════════════════════════════════════
 let convUploadedFile = null;
 let pendingCourseUpload = null;
+let convProvider = 'gemini'; // 'gemini' | 'claude'
 
-// ── API key persistence ──
+// ── API key persistence (separate keys per provider) ──
 window.addEventListener('DOMContentLoaded', ()=>{
-  const saved = localStorage.getItem('sh_claude_api_key');
-  const inp = document.getElementById('convApiKey');
-  if(saved && inp) inp.value = saved;
+  const savedClaude = localStorage.getItem('sh_claude_api_key');
+  const savedGemini = localStorage.getItem('sh_gemini_api_key');
+  const claudeInp = document.getElementById('convApiKey');
+  const geminiInp = document.getElementById('convGeminiKey');
+  if(savedClaude && claudeInp) claudeInp.value = savedClaude;
+  if(savedGemini && geminiInp) geminiInp.value = savedGemini;
 });
 document.getElementById('convApiKey')?.addEventListener('change', e=>{
   localStorage.setItem('sh_claude_api_key', e.target.value);
 });
+document.getElementById('convGeminiKey')?.addEventListener('change', e=>{
+  localStorage.setItem('sh_gemini_api_key', e.target.value);
+});
 
-function toggleConvKeyVisibility(){
-  const inp = document.getElementById('convApiKey');
-  const btn = document.getElementById('convToggleKeyBtn');
+function selectProvider(provider){
+  convProvider = provider;
+  document.getElementById('provTabGemini').classList.toggle('active', provider==='gemini');
+  document.getElementById('provTabClaude').classList.toggle('active', provider==='claude');
+  document.getElementById('geminiKeyArea').style.display = provider==='gemini' ? '' : 'none';
+  document.getElementById('claudeKeyArea').style.display = provider==='claude' ? '' : 'none';
+}
+
+function toggleKeyVis(inputId, btnId){
+  const inp = document.getElementById(inputId);
+  const btn = document.getElementById(btnId);
   if(inp.type==='password'){ inp.type='text'; btn.textContent='🙈'; }
   else { inp.type='password'; btn.textContent='👁'; }
 }
@@ -2658,14 +2748,17 @@ function hideConvError(){
 // ── Main: start AI conversion ──
 async function startAIConversion(){
   hideConvError();
-  const apiKey = document.getElementById('convApiKey').value.trim();
+  const apiKey = convProvider === 'claude'
+    ? document.getElementById('convApiKey').value.trim()
+    : document.getElementById('convGeminiKey').value.trim();
   const courseCode = document.getElementById('convCourseCode').value.trim().toUpperCase();
   const courseName = document.getElementById('convCourseName').value.trim();
   const courseIcon = document.getElementById('convCourseIcon').value.trim() || '📘';
   const courseColor = document.getElementById('convCourseColor').value;
   const pastedText = document.getElementById('convPasteText').value.trim();
 
-  if(!apiKey){ showConvError('Vui lòng nhập Claude API Key.'); return; }
+  const providerLabel = convProvider === 'claude' ? 'Claude' : 'Gemini';
+  if(!apiKey){ showConvError(`Vui lòng nhập ${providerLabel} API Key.`); return; }
   if(!courseCode){ showConvError('Vui lòng nhập mã môn học.'); return; }
   if(!courseName){ showConvError('Vui lòng nhập tên môn học.'); return; }
   if(!convUploadedFile && !pastedText){ showConvError('Vui lòng upload file hoặc dán văn bản câu hỏi.'); return; }
@@ -2691,8 +2784,10 @@ async function startAIConversion(){
       throw new Error('Không trích xuất được nội dung. Thử file khác hoặc dán văn bản trực tiếp.');
     }
 
-    updateConvProgress(35, 'Đang gửi nội dung đến AI để phân tích...');
-    const questions = await analyzeWithClaudeAI(text, apiKey, (pct,msg)=>updateConvProgress(pct,msg));
+    updateConvProgress(35, `Đang gửi nội dung đến ${providerLabel} để phân tích...`);
+    const questions = convProvider === 'claude'
+      ? await analyzeWithClaudeAI(text, apiKey, (pct,msg)=>updateConvProgress(pct,msg))
+      : await analyzeWithGeminiAI(text, apiKey, (pct,msg)=>updateConvProgress(pct,msg));
 
     if(!questions || questions.length === 0){
       throw new Error('AI không tìm thấy câu hỏi trắc nghiệm nào. Kiểm tra lại nội dung file.');
@@ -2716,28 +2811,9 @@ async function startAIConversion(){
   }
 }
 
-// ── Call Claude API to extract questions ──
-async function analyzeWithClaudeAI(text, apiKey, onProgress){
-  const MAX_CHUNK = 15000;
-  const chunks = [];
-  if(text.length <= MAX_CHUNK){
-    chunks.push(text);
-  } else {
-    const paragraphs = text.split(/\n\s*\n/);
-    let current = '';
-    for(const p of paragraphs){
-      if((current+p).length > MAX_CHUNK && current.length>0){ chunks.push(current); current = p; }
-      else current += (current?'\n\n':'') + p;
-    }
-    if(current) chunks.push(current);
-  }
-
-  let allQuestions = [];
-
-  for(let i=0; i<chunks.length; i++){
-    onProgress(35 + (i/chunks.length)*55, `AI đang phân tích phần ${i+1}/${chunks.length}...`);
-
-    const prompt = `Bạn là một trợ lý chuyên trích xuất câu hỏi trắc nghiệm từ văn bản. Hãy đọc kỹ đoạn văn bản dưới đây và trích xuất TẤT CẢ các câu hỏi trắc nghiệm (multiple choice) có trong đó.
+// ── Shared prompt builder ──
+function buildExtractionPrompt(textChunk){
+  return `Bạn là một trợ lý chuyên trích xuất câu hỏi trắc nghiệm từ văn bản. Hãy đọc kỹ đoạn văn bản dưới đây và trích xuất TẤT CẢ các câu hỏi trắc nghiệm (multiple choice) có trong đó.
 
 QUAN TRỌNG:
 - Mỗi câu hỏi PHẢI có đầy đủ phần câu hỏi và các lựa chọn (options)
@@ -2754,9 +2830,93 @@ Trả về DUY NHẤT một JSON array hợp lệ, không có markdown code bloc
 
 Văn bản cần phân tích:
 """
-${chunks[i]}
+${textChunk}
 """`;
+}
 
+function splitIntoChunks(text, maxChunk=15000){
+  const chunks = [];
+  if(text.length <= maxChunk){ chunks.push(text); return chunks; }
+  const paragraphs = text.split(/\n\s*\n/);
+  let current = '';
+  for(const p of paragraphs){
+    if((current+p).length > maxChunk && current.length>0){ chunks.push(current); current = p; }
+    else current += (current?'\n\n':'') + p;
+  }
+  if(current) chunks.push(current);
+  return chunks;
+}
+
+function parseAIJsonResponse(textContent){
+  let cleaned = textContent.trim();
+  cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+  try{
+    const parsed = JSON.parse(cleaned);
+    if(Array.isArray(parsed)) return parsed;
+  } catch(e){
+    const match = cleaned.match(/\[[\s\S]*\]/);
+    if(match){
+      try{ const p2 = JSON.parse(match[0]); if(Array.isArray(p2)) return p2; }catch(e2){}
+    }
+  }
+  return [];
+}
+
+function cleanQuestions(arr){
+  return arr
+    .filter(q => q.q && Array.isArray(q.opts) && q.opts.length >= 2)
+    .map(q => ({
+      q: String(q.q).trim(),
+      opts: q.opts.map(o=>String(o).trim()),
+      ans: typeof q.ans === 'number' ? q.ans : -1,
+      exp: q.exp ? String(q.exp).trim() : '',
+      uncertain: q.ans === -1 || q.uncertain === true
+    }));
+}
+
+// ── Call Gemini API to extract questions (free tier) ──
+async function analyzeWithGeminiAI(text, apiKey, onProgress){
+  const chunks = splitIntoChunks(text);
+  let allQuestions = [];
+
+  for(let i=0; i<chunks.length; i++){
+    onProgress(35 + (i/chunks.length)*55, `Gemini đang phân tích phần ${i+1}/${chunks.length}...`);
+
+    const prompt = buildExtractionPrompt(chunks[i]);
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: { temperature: 0.2, maxOutputTokens: 8192 }
+        })
+      }
+    );
+
+    if(!response.ok){
+      const errData = await response.json().catch(()=>({}));
+      throw new Error(`Lỗi Gemini API (${response.status}): ${errData?.error?.message || 'Kiểm tra lại API key.'}`);
+    }
+
+    const data = await response.json();
+    const textContent = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    allQuestions = allQuestions.concat(parseAIJsonResponse(textContent));
+  }
+
+  return cleanQuestions(allQuestions);
+}
+
+// ── Call Claude API to extract questions ──
+async function analyzeWithClaudeAI(text, apiKey, onProgress){
+  const chunks = splitIntoChunks(text);
+  let allQuestions = [];
+
+  for(let i=0; i<chunks.length; i++){
+    onProgress(35 + (i/chunks.length)*55, `Claude đang phân tích phần ${i+1}/${chunks.length}...`);
+
+    const prompt = buildExtractionPrompt(chunks[i]);
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -2774,37 +2934,15 @@ ${chunks[i]}
 
     if(!response.ok){
       const errData = await response.json().catch(()=>({}));
-      throw new Error(`Lỗi API (${response.status}): ${errData?.error?.message || 'Không thể kết nối Claude API. Kiểm tra lại API key.'}`);
+      throw new Error(`Lỗi Claude API (${response.status}): ${errData?.error?.message || 'Kiểm tra lại API key.'}`);
     }
 
     const data = await response.json();
     const textContent = data.content?.find(c=>c.type==='text')?.text || '';
-    let cleaned = textContent.trim();
-    cleaned = cleaned.replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
-
-    try{
-      const parsed = JSON.parse(cleaned);
-      if(Array.isArray(parsed)) allQuestions = allQuestions.concat(parsed);
-    } catch(parseErr){
-      const match = cleaned.match(/\[[\s\S]*\]/);
-      if(match){
-        try{
-          const parsed2 = JSON.parse(match[0]);
-          if(Array.isArray(parsed2)) allQuestions = allQuestions.concat(parsed2);
-        }catch(e2){ /* skip chunk */ }
-      }
-    }
+    allQuestions = allQuestions.concat(parseAIJsonResponse(textContent));
   }
 
-  return allQuestions
-    .filter(q => q.q && Array.isArray(q.opts) && q.opts.length >= 2)
-    .map(q => ({
-      q: String(q.q).trim(),
-      opts: q.opts.map(o=>String(o).trim()),
-      ans: typeof q.ans === 'number' ? q.ans : -1,
-      exp: q.exp ? String(q.exp).trim() : '',
-      uncertain: q.ans === -1 || q.uncertain === true
-    }));
+  return cleanQuestions(allQuestions);
 }
 
 // ── Show preview of parsed questions ──
@@ -2860,7 +2998,6 @@ async function confirmAddCourse(){
     showToast(`Đã thêm môn "${data.name}" (${data.questions.length} câu) vào StudyHub!`,'ok');
     cancelCourseUpload();
     renderCourseListAdmin();
-    renderAddStudentTab();
   } catch(e){
     showToast('Lỗi khi lưu môn học: '+e.message,'err');
     console.error(e);
@@ -3619,6 +3756,303 @@ function confetti(big=false){
     setTimeout(()=>p.remove(),4000);
   }
 }
+
+// ═══════════════════════════════════════
+//  CHAT SYSTEM — Student ↔ Admin (text only)
+//  Firestore model:
+//    chats/{studentUid}                → {studentName, studentEmail, lastMessage, lastTimestamp, unreadByAdmin, unreadByStudent}
+//    chats/{studentUid}/messages/{id}  → {senderRole:'student'|'admin', text, timestamp}
+// ═══════════════════════════════════════
+
+function formatChatTime(ts){
+  if(!ts) return '';
+  const d = ts.toDate ? ts.toDate() : new Date(ts);
+  const now = new Date();
+  const isToday = d.toDateString() === now.toDateString();
+  if(isToday) return d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+  return d.toLocaleDateString('vi-VN',{day:'2-digit',month:'2-digit'}) + ' ' + d.toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'});
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ───────────────────────────────────────
+//  STUDENT SIDE
+// ───────────────────────────────────────
+let studentChatUnsub = null;
+let studentChatDocRef = null;
+
+function openStudentChat(){
+  if(!currentUser || currentUser.type !== 'student') return;
+  document.getElementById('studentChatOverlay').classList.add('show');
+
+  const uid = currentUser.user.uid;
+  studentChatDocRef = db.collection('chats').doc(uid);
+
+  // Ensure chat doc exists (create on first open)
+  studentChatDocRef.get().then(snap=>{
+    if(!snap.exists){
+      studentChatDocRef.set({
+        studentName: currentUser.data.name || currentUser.user.displayName || '',
+        studentEmail: currentUser.user.email,
+        lastMessage: '',
+        lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        unreadByAdmin: 0,
+        unreadByStudent: 0
+      });
+    } else {
+      // Mark as read by student when opening
+      studentChatDocRef.update({unreadByStudent: 0});
+      updateStudentChatBadge(0);
+    }
+  });
+
+  // Listen to messages in realtime
+  if(studentChatUnsub) studentChatUnsub();
+  studentChatUnsub = studentChatDocRef.collection('messages')
+    .orderBy('timestamp','asc')
+    .onSnapshot(snap=>{
+      renderStudentChatMessages(snap.docs.map(d=>d.data()));
+      // Mark read again in case a new message arrived while panel open
+      studentChatDocRef.update({unreadByStudent: 0}).catch(()=>{});
+    });
+
+  setTimeout(()=>document.getElementById('studentChatInput')?.focus(), 200);
+}
+
+function closeStudentChat(){
+  document.getElementById('studentChatOverlay').classList.remove('show');
+}
+
+function renderStudentChatMessages(messages){
+  const box = document.getElementById('studentChatMessages');
+  if(!box) return;
+
+  if(messages.length === 0){
+    box.innerHTML = `<div class="chat-empty-state">
+      <div class="ces-icon">👋</div>
+      <p>Xin chào! Bạn có thắc mắc gì về môn học hoặc tài khoản? Nhắn cho StudyHub Assistant nhé.</p>
+    </div>`;
+    return;
+  }
+
+  box.innerHTML = messages.map(m=>{
+    const isMe = m.senderRole === 'student';
+    return `<div class="chat-msg-row ${isMe?'from-me':'from-them'}">
+      ${!isMe?'<div class="chat-msg-sender">StudyHub Assistant</div>':''}
+      <div class="chat-bubble">${escapeHtml(m.text)}</div>
+      <div class="chat-msg-time">${formatChatTime(m.timestamp)}</div>
+    </div>`;
+  }).join('');
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function autoGrowChatInput(textarea){
+  textarea.style.height = 'auto';
+  textarea.style.height = Math.min(textarea.scrollHeight, 100) + 'px';
+}
+
+function handleChatInputKey(event, role){
+  if(event.key === 'Enter' && !event.shiftKey){
+    event.preventDefault();
+    sendChatMessage(role);
+  }
+}
+
+async function sendChatMessage(role){
+  if(role === 'student'){
+    const input = document.getElementById('studentChatInput');
+    const text = input.value.trim();
+    if(!text || !studentChatDocRef) return;
+
+    input.value = '';
+    autoGrowChatInput(input);
+
+    await studentChatDocRef.collection('messages').add({
+      senderRole: 'student',
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await studentChatDocRef.update({
+      lastMessage: text,
+      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      unreadByAdmin: firebase.firestore.FieldValue.increment(1),
+      unreadByStudent: 0,
+      studentName: currentUser.data.name || currentUser.user.displayName || '',
+      studentEmail: currentUser.user.email
+    });
+  } else {
+    // Admin sending reply
+    const input = document.getElementById('adminChatInput');
+    const text = input.value.trim();
+    if(!text || !activeChatStudentUid) return;
+
+    input.value = '';
+    autoGrowChatInput(input);
+
+    const chatRef = db.collection('chats').doc(activeChatStudentUid);
+    await chatRef.collection('messages').add({
+      senderRole: 'admin',
+      text,
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    await chatRef.update({
+      lastMessage: text,
+      lastTimestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      unreadByStudent: firebase.firestore.FieldValue.increment(1),
+      unreadByAdmin: 0
+    });
+  }
+}
+
+// Listen for unread badge on student's own chat (runs alongside main student listener)
+function watchStudentChatBadge(uid){
+  db.collection('chats').doc(uid).onSnapshot(snap=>{
+    if(!snap.exists) return;
+    const data = snap.data();
+    // Only show unread badge if panel is currently closed
+    const panelOpen = document.getElementById('studentChatOverlay')?.classList.contains('show');
+    if(!panelOpen){
+      updateStudentChatBadge(data.unreadByStudent || 0);
+    }
+  });
+}
+
+function updateStudentChatBadge(count){
+  const badge = document.getElementById('studentChatBadge');
+  if(!badge) return;
+  if(count > 0){
+    badge.textContent = count > 9 ? '9+' : count;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ───────────────────────────────────────
+//  ADMIN SIDE — Inbox with all student conversations
+// ───────────────────────────────────────
+let adminChatListUnsub = null;
+let adminChatMsgUnsub = null;
+let activeChatStudentUid = null;
+let adminChatConversations = [];
+
+function initAdminChatInbox(){
+  if(adminChatListUnsub) adminChatListUnsub();
+
+  adminChatListUnsub = db.collection('chats')
+    .orderBy('lastTimestamp','desc')
+    .onSnapshot(snap=>{
+      adminChatConversations = snap.docs.map(d=>({...d.data(), uid: d.id}));
+      renderAdminChatList();
+      updateAdminChatNavBadge();
+    });
+}
+
+function updateAdminChatNavBadge(){
+  const totalUnread = adminChatConversations.reduce((sum,c)=>sum+(c.unreadByAdmin||0),0);
+  const badge = document.getElementById('adminChatBadge');
+  if(!badge) return;
+  if(totalUnread > 0){
+    badge.textContent = totalUnread > 9 ? '9+' : totalUnread;
+    badge.style.display = 'inline';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function renderAdminChatList(){
+  const list = document.getElementById('adminChatList');
+  if(!list) return;
+
+  if(adminChatConversations.length === 0){
+    list.innerHTML = `<div class="admin-chat-list-empty">
+      <div style="font-size:36px;margin-bottom:10px">💬</div>
+      <p style="font-size:13px">Chưa có học sinh nào nhắn tin.</p>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = adminChatConversations.map(c=>{
+    const unread = c.unreadByAdmin || 0;
+    const initial = (c.studentName||c.studentEmail||'?').charAt(0).toUpperCase();
+    return `<div class="admin-chat-list-item ${c.uid===activeChatStudentUid?'active':''}" onclick="openAdminChatThread('${c.uid}')">
+      <div class="acl-avatar">${initial}</div>
+      <div class="acl-info">
+        <div class="acl-name">${escapeHtml(c.studentName || c.studentEmail || 'Học sinh')}</div>
+        <div class="acl-preview">${escapeHtml(c.lastMessage || 'Chưa có tin nhắn')}</div>
+      </div>
+      <div class="acl-meta">
+        <div class="acl-time">${formatChatTime(c.lastTimestamp)}</div>
+        ${unread>0?'<div class="acl-unread-dot"></div>':''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openAdminChatThread(studentUid){
+  activeChatStudentUid = studentUid;
+  renderAdminChatList(); // refresh active highlight
+
+  const conv = adminChatConversations.find(c=>c.uid===studentUid);
+  const chatRef = db.collection('chats').doc(studentUid);
+
+  // Mark read by admin
+  chatRef.update({unreadByAdmin: 0}).catch(()=>{});
+
+  const main = document.getElementById('adminChatMain');
+  main.innerHTML = `
+    <div class="admin-chat-main-header">
+      <div class="chat-avatar-circle" style="background:linear-gradient(135deg,#f59e0b,#ef4444)">${(conv?.studentName||'?').charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="chat-header-title">${escapeHtml(conv?.studentName || 'Học sinh')}</div>
+        <div class="chat-header-sub" style="color:var(--muted)">${escapeHtml(conv?.studentEmail || '')}</div>
+      </div>
+    </div>
+    <div class="chat-messages" id="adminChatMessages"></div>
+    <div class="chat-input-area">
+      <textarea class="chat-text-input" id="adminChatInput" placeholder="Nhập tin nhắn..." rows="1" onkeydown="handleChatInputKey(event,'admin')" oninput="autoGrowChatInput(this)"></textarea>
+      <button class="chat-send-btn" onclick="sendChatMessage('admin')">➤</button>
+    </div>`;
+
+  if(adminChatMsgUnsub) adminChatMsgUnsub();
+  adminChatMsgUnsub = chatRef.collection('messages')
+    .orderBy('timestamp','asc')
+    .onSnapshot(snap=>{
+      renderAdminChatMessages(snap.docs.map(d=>d.data()));
+      chatRef.update({unreadByAdmin: 0}).catch(()=>{});
+    });
+
+  setTimeout(()=>document.getElementById('adminChatInput')?.focus(), 100);
+}
+
+function renderAdminChatMessages(messages){
+  const box = document.getElementById('adminChatMessages');
+  if(!box) return;
+
+  if(messages.length === 0){
+    box.innerHTML = `<div class="chat-empty-state">
+      <div class="ces-icon">💬</div>
+      <p>Chưa có tin nhắn nào trong hội thoại này.</p>
+    </div>`;
+    return;
+  }
+
+  box.innerHTML = messages.map(m=>{
+    const isMe = m.senderRole === 'admin';
+    return `<div class="chat-msg-row ${isMe?'from-me':'from-them'}">
+      <div class="chat-bubble">${escapeHtml(m.text)}</div>
+      <div class="chat-msg-time">${formatChatTime(m.timestamp)}</div>
+    </div>`;
+  }).join('');
+
+  box.scrollTop = box.scrollHeight;
+}
+
 </script>
 </body>
 </html>
