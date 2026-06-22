@@ -165,6 +165,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .theme-toggle-btn:hover{border-color:var(--gold);transform:rotate(15deg) scale(1.05)}
 .theme-toggle-btn.spin{animation:themeFlip .4s ease}
 @keyframes themeFlip{0%{transform:rotate(0) scale(1)}50%{transform:rotate(180deg) scale(.7)}100%{transform:rotate(360deg) scale(1)}}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* ─── MAIN CONTENT ─── */
 .main{flex:1;padding:32px 24px;max-width:960px;margin:0 auto;width:100%}
@@ -191,6 +192,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .mode-card p{font-size:13px;color:var(--muted);line-height:1.5}
 .mode-arrow{position:absolute;top:20px;right:20px;font-size:18px;color:var(--muted2);transition:transform .2s}
 .mode-card:hover .mode-arrow{transform:translate(4px,-4px)}
+.mode-resume-badge{display:inline-flex;align-items:center;gap:6px;margin-top:12px;font-size:11px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);padding:5px 12px;border-radius:20px}
 
 /* ─── FLASHCARD MODE ─── */
 .flashcard-view{animation:fadeUp .3s ease}
@@ -2912,6 +2914,7 @@ async function submitRegister(){
 // ── Logout ──
 function doLogout(){
   if(!confirm('Đăng xuất khỏi StudyHub?')) return;
+  if(activeMode === 'learn') flushLearnProgress();
   if(unsubscribeStudent){ unsubscribeStudent(); }
   if(announceUnsub){ announceUnsub(); announceUnsub=null; }
   if(announceBadgeUnsub){ announceBadgeUnsub(); announceBadgeUnsub=null; }
@@ -3682,6 +3685,7 @@ function selectCourse(idx){
 }
 
 function showCourseHome(){
+  if(activeMode === 'learn') flushLearnProgress();
   activeMode = 'home';
   const c = COURSES[activeCourse];
   const s = session[activeCourse];
@@ -3730,6 +3734,7 @@ function showCourseHome(){
         <span class="mode-arrow"><svg class="ic"><use href="#ic-arrow-up-right"></use></svg></span>
         <h3>Học</h3>
         <p>Làm câu hỏi trắc nghiệm tuần tự. Phản hồi tức thì sau mỗi câu.</p>
+        <span class="mode-resume-badge" id="lrnResumeBadge" style="display:none">Đang học dở</span>
       </div>
       <div class="mode-card" onclick="startTest()" style="--c:${c.colorName}">
         <span class="mode-icon"><svg class="ic"><use href="#ic-file-text"></use></svg></span>
@@ -3739,6 +3744,21 @@ function showCourseHome(){
       </div>
     </div>
   </div>`;
+
+  // Kiểm tra ngầm xem môn này có tiến trình "Học" đang chờ tiếp tục không
+  checkAndShowResumeBadge(c.code);
+}
+
+async function checkAndShowResumeBadge(courseCode){
+  const saved = await loadLearnProgress(courseCode);
+  // Chỉ hiện badge nếu vẫn đang xem đúng môn đó (tránh hiện sai khi người dùng đã chuyển môn khác trong lúc chờ)
+  if(COURSES[activeCourse] && COURSES[activeCourse].code !== courseCode) return;
+  const badge = document.getElementById('lrnResumeBadge');
+  if(!badge) return;
+  if(saved && Array.isArray(saved.mastered) && saved.mastered.length > 0){
+    badge.textContent = `Đang học dở · ${saved.mastered.length}/${COURSES[activeCourse].questions.length} câu`;
+    badge.style.display = 'inline-flex';
+  }
 }
 
 // ═══════════════════════════════════════
@@ -3872,11 +3892,103 @@ let lrn = {
   reviewPool: [],
 };
 
-function startLearn(){
+let lrnSaveTimer = null;
+let lrnLoadedCourseCode = null; // tracks which course's progress is currently loaded in `lrn`
+
+// ── Lưu tiến trình học lên Firestore (debounce nhẹ để tránh ghi quá nhiều) ──
+function saveLearnProgress(){
+  if(!currentUser || currentUser.type !== 'student') return;
+  if(lrn.allQs.length === 0) return;
+
+  clearTimeout(lrnSaveTimer);
+  lrnSaveTimer = setTimeout(()=>{
+    const c = COURSES[activeCourse];
+    const data = {
+      qOrder: lrn.allQs.map(q=>q._origIdx),
+      mastered: Array.from(lrn.mastered),
+      streaks: lrn.streaks,
+      phase: lrn.phase,
+      groupStart: lrn.groupStart,
+      queue: lrn.queue,
+      queueIdx: lrn.queueIdx,
+      newWrong: lrn.newWrong,
+      reviewPool: lrn.reviewPool,
+      roundNum: lrn.roundNum,
+      totalCorrect: lrn.totalCorrect,
+      totalWrong: lrn.totalWrong,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+    db.collection('students').doc(currentUser.user.uid)
+      .collection('learnProgress').doc(c.code)
+      .set(data)
+      .catch(e=>console.warn('Could not save learn progress:', e));
+  }, 400);
+}
+
+// ── Xóa tiến trình đã lưu (khi học xong toàn bộ hoặc người dùng học lại từ đầu) ──
+function clearLearnProgress(courseCode){
+  if(!currentUser || currentUser.type !== 'student') return;
+  db.collection('students').doc(currentUser.user.uid)
+    .collection('learnProgress').doc(courseCode)
+    .delete()
+    .catch(e=>console.warn('Could not clear learn progress:', e));
+}
+
+// ── Tải tiến trình đã lưu cho môn hiện tại, trả về null nếu chưa có ──
+async function loadLearnProgress(courseCode){
+  if(!currentUser || currentUser.type !== 'student') return null;
+  try{
+    const snap = await db.collection('students').doc(currentUser.user.uid)
+      .collection('learnProgress').doc(courseCode).get();
+    return snap.exists ? snap.data() : null;
+  }catch(e){
+    console.warn('Could not load learn progress:', e);
+    return null;
+  }
+}
+
+async function startLearn(forceRestart){
   activeMode = 'learn';
   const c = COURSES[activeCourse];
-  const all = shuffle([...c.questions]);
 
+  // Hiện loading ngắn trong lúc kiểm tra tiến trình đã lưu trên Firestore
+  document.getElementById('mainArea').innerHTML = `
+  <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 20px;color:var(--muted)">
+    <div style="width:32px;height:32px;border:3px solid var(--border);border-top-color:${c.color};border-radius:50%;animation:spin .7s linear infinite;margin-bottom:16px"></div>
+    <p style="font-size:13px">Đang tải tiến trình học...</p>
+  </div>`;
+
+  const saved = forceRestart ? null : await loadLearnProgress(c.code);
+
+  if(saved && Array.isArray(saved.qOrder) && saved.qOrder.length === c.questions.length){
+    // ── Khôi phục đúng thứ tự câu hỏi đã xáo trộn trước đó ──
+    lrn.allQs = saved.qOrder.map(origIdx => ({...c.questions[origIdx], _origIdx: origIdx}));
+    lrn.mastered = new Set(saved.mastered || []);
+    lrn.streaks = saved.streaks || {};
+    lrn.phase = saved.phase || 'new';
+    lrn.groupStart = saved.groupStart || 0;
+    lrn.queue = saved.queue || [];
+    lrn.queueIdx = saved.queueIdx || 0;
+    lrn.newWrong = saved.newWrong || [];
+    lrn.reviewPool = saved.reviewPool || [];
+    lrn.roundNum = saved.roundNum || 1;
+    lrn.totalCorrect = saved.totalCorrect || 0;
+    lrn.totalWrong = saved.totalWrong || 0;
+    lrnLoadedCourseCode = c.code;
+
+    // Nếu hàng đợi hiện tại đã hết (vd: lưu ngay sau câu cuối) thì điều hướng tiếp như bình thường
+    if(lrn.queueIdx >= lrn.queue.length){
+      if(lrn.phase === 'new')    { beginRetryPhase(); return; }
+      if(lrn.phase === 'retry')  { afterRetry();      return; }
+      if(lrn.phase === 'review') { beginNewGroup();   return; }
+    }
+    renderLearnQ();
+    showToast('Đã tiếp tục từ lần học trước!','ok');
+    return;
+  }
+
+  // ── Không có tiến trình đã lưu (hoặc người dùng chọn học lại) → bắt đầu mới ──
+  const all = shuffle([...c.questions]);
   lrn.allQs = all.map((q,i)=>({...q, _origIdx:i}));
   lrn.mastered = new Set();
   lrn.streaks = {};
@@ -3886,6 +3998,7 @@ function startLearn(){
   lrn.groupStart = 0;
   lrn.newWrong = [];
   lrn.reviewPool = [];
+  lrnLoadedCourseCode = c.code;
 
   beginNewGroup();
 }
@@ -3967,6 +4080,9 @@ function endLearnSession(){
   session[activeCourse].wrong   += lrn.totalWrong;
   session[activeCourse].learned  = total;
 
+  // Đã thuộc hết toàn bộ câu hỏi — không cần lưu tiến trình resume nữa
+  clearLearnProgress(c.code);
+
   document.getElementById('mainArea').innerHTML = `
   <div class="completion-screen show">
     <div class="comp-trophy"><svg class="ic"><use href="#ic-trophy"></use></svg></div>
@@ -3974,7 +4090,7 @@ function endLearnSession(){
     <h2 style="font-size:22px;font-weight:800;margin-bottom:6px">Đã thuộc ${masteredCount}/${total} câu!</h2>
     <p style="color:var(--muted);margin-bottom:24px">${c.code} · ${lrn.totalCorrect} đúng · ${lrn.totalWrong} sai</p>
     <div class="results-actions">
-      <button class="ra-btn primary" onclick="startLearn()"><svg class="ic"><use href="#ic-refresh-cw"></use></svg> Học lại từ đầu</button>
+      <button class="ra-btn primary" onclick="startLearn(true)"><svg class="ic"><use href="#ic-refresh-cw"></use></svg> Học lại từ đầu</button>
       <button class="ra-btn secondary" onclick="showCourseHome()"><svg class="ic"><use href="#ic-arrow-left"></use></svg> Về trang chủ</button>
     </div>
   </div>`;
@@ -4118,6 +4234,35 @@ function checkLearnQ(sel, correct, qIdx, btn){
 
   session[activeCourse].learned = Math.max(session[activeCourse].learned, lrn.mastered.size);
   document.getElementById('nextLrnBtn').className='next-btn show';
+  saveLearnProgress();
+}
+
+// ── Lưu ngay lập tức (không debounce) — dùng khi người dùng rời màn hình Học giữa chừng ──
+function flushLearnProgress(){
+  clearTimeout(lrnSaveTimer);
+  if(!currentUser || currentUser.type !== 'student') return;
+  if(lrn.allQs.length === 0) return;
+
+  const c = COURSES[activeCourse];
+  const data = {
+    qOrder: lrn.allQs.map(q=>q._origIdx),
+    mastered: Array.from(lrn.mastered),
+    streaks: lrn.streaks,
+    phase: lrn.phase,
+    groupStart: lrn.groupStart,
+    queue: lrn.queue,
+    queueIdx: lrn.queueIdx,
+    newWrong: lrn.newWrong,
+    reviewPool: lrn.reviewPool,
+    roundNum: lrn.roundNum,
+    totalCorrect: lrn.totalCorrect,
+    totalWrong: lrn.totalWrong,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  db.collection('students').doc(currentUser.user.uid)
+    .collection('learnProgress').doc(c.code)
+    .set(data)
+    .catch(e=>console.warn('Could not flush learn progress:', e));
 }
 
 function advanceLrn(){
