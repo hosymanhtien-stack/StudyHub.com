@@ -1092,7 +1092,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
           <h2><svg class="ic"><use href="#ic-users"></use></svg> Danh sách học sinh</h2>
           <p>Quản lý tài khoản và phân quyền môn học cho từng học sinh.</p>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
-            <input class="admin-search" id="stuSearch" placeholder="<svg class="ic"><use href="#ic-search"></use></svg> Tìm tên hoặc tài khoản…" oninput="renderStudentTable()"/>
+            <input class="admin-search" id="stuSearch" placeholder="Tìm tên hoặc tài khoản…" oninput="renderStudentTable()"/>
             <span style="font-size:12px;color:var(--muted)" id="stuCount"></span>
           </div>
           <div style="overflow-x:auto">
@@ -1212,7 +1212,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
               <div class="admin-form-row" style="grid-template-columns:1fr 1fr;margin-top:12px">
                 <div class="admin-input-wrap">
                   <label>Icon (emoji)</label>
-                  <input type="text" id="convCourseIcon" class="admin-input" placeholder="<svg class="ic"><use href="#ic-book-marked"></use></svg>" value="<svg class="ic"><use href="#ic-book-marked"></use></svg>" maxlength="4"/>
+                  <input type="text" id="convCourseIcon" class="admin-input" placeholder="📘" value="📘" maxlength="4"/>
                 </div>
                 <div class="admin-input-wrap">
                   <label>Màu chủ đề</label>
@@ -2933,7 +2933,7 @@ function renderStudentNav(data){
     const btn = document.createElement('button');
     btn.className='nav-btn';
     btn.dataset.course=i;
-    btn.textContent=cm.label;
+    btn.innerHTML=cm.label;
     btn.onclick=()=>selectNavCourse(i, btn);
     if(isFirst){
       btn.classList.add('active');
@@ -3890,6 +3890,10 @@ let lrn = {
 
   // Câu để ôn từ nhóm trước
   reviewPool: [],
+
+  // Con trỏ xoay vòng đảm bảo mọi câu chưa thuộc đều được ôn lại công bằng,
+  // không phụ thuộc may rủi của random.slice()
+  reviewCursor: 0,
 };
 
 let lrnSaveTimer = null;
@@ -3913,6 +3917,7 @@ function saveLearnProgress(){
       queueIdx: lrn.queueIdx,
       newWrong: lrn.newWrong,
       reviewPool: lrn.reviewPool,
+      reviewCursor: lrn.reviewCursor,
       roundNum: lrn.roundNum,
       totalCorrect: lrn.totalCorrect,
       totalWrong: lrn.totalWrong,
@@ -3974,6 +3979,7 @@ async function startLearn(forceRestart){
     lrn.roundNum = saved.roundNum || 1;
     lrn.totalCorrect = saved.totalCorrect || 0;
     lrn.totalWrong = saved.totalWrong || 0;
+    lrn.reviewCursor = saved.reviewCursor || 0;
     lrnLoadedCourseCode = c.code;
 
     // Nếu hàng đợi hiện tại đã hết (vd: lưu ngay sau câu cuối) thì điều hướng tiếp như bình thường
@@ -3998,6 +4004,7 @@ async function startLearn(forceRestart){
   lrn.groupStart = 0;
   lrn.newWrong = [];
   lrn.reviewPool = [];
+  lrn.reviewCursor = 0;
   lrnLoadedCourseCode = c.code;
 
   beginNewGroup();
@@ -4015,14 +4022,9 @@ function beginNewGroup(){
   // Lấy nhóm câu mới (kể từ groupStart, chưa mastered)
   const newBatch = unmastered.slice(lrn.groupStart, lrn.groupStart + LRN_GROUP);
   if(newBatch.length === 0){
-    // Đã học hết nhóm mới, chuyển sang ôn toàn bộ câu còn chưa mastered
+    // Đã học hết các nhóm câu mới — chuyển sang ôn xoay vòng toàn bộ câu chưa mastered
     lrn.groupStart = 0;
-    const remaining = lrn.allQs.map((_,i)=>i).filter(i=>!lrn.mastered.has(i));
-    lrn.queue = shuffle([...remaining]);
-    lrn.queueIdx = 0;
-    lrn.phase = 'retry';
-    lrn.newWrong = [];
-    renderLearnQ();
+    beginReviewCycle();
     return;
   }
 
@@ -4033,10 +4035,10 @@ function beginNewGroup(){
   renderLearnQ();
 }
 
-/* ── sau khi xong phase 'new': retake câu sai ── */
+/* ── sau khi xong phase 'new': retake câu sai ngay ── */
 function beginRetryPhase(){
   if(lrn.newWrong.length === 0){
-    // Không có câu sai <svg class="ic"><use href="#ic-arrow-right"></use></svg> chuyển sang ôn nhóm trước
+    // Không có câu sai → ôn một lượt các câu cũ trước khi học nhóm mới tiếp theo
     afterRetry();
     return;
   }
@@ -4046,27 +4048,60 @@ function beginRetryPhase(){
   renderLearnQ();
 }
 
-/* ── sau khi retry xong <svg class="ic"><use href="#ic-arrow-right"></use></svg> ôn nhanh câu từ nhóm trước ── */
+/* ── sau khi retry xong: ôn một lượt nhỏ các câu đã học trước đó rồi mới sang nhóm mới ── */
 function afterRetry(){
-  // Cộng groupStart lên để sang nhóm tiếp theo
   lrn.groupStart += LRN_GROUP;
 
-  // Chọn câu ôn từ các câu đã học trước đó (chưa mastered vẫn ưu tiên)
   const prevLearned = lrn.allQs
     .map((_,i)=>i)
     .filter(i=> i < lrn.groupStart && !lrn.mastered.has(i));
 
   if(prevLearned.length > 0){
-    lrn.reviewPool = shuffle([...prevLearned]).slice(0, LRN_REVIEW);
     lrn.phase = 'review';
-    lrn.queue = [...lrn.reviewPool];
+    lrn.queue = pickReviewBatch(prevLearned, LRN_REVIEW);
     lrn.queueIdx = 0;
     lrn.roundNum++;
     renderLearnQ();
   } else {
-    // Không có gì để ôn <svg class="ic"><use href="#ic-arrow-right"></use></svg> học tiếp nhóm mới
     beginNewGroup();
   }
+}
+
+/* ── Ôn xoay vòng TOÀN BỘ câu chưa mastered, theo từng đợt nhỏ ──
+   Dùng khi đã học hết các nhóm câu mới — đảm bảo CÔNG BẰNG: mọi câu
+   chưa thuộc đều chắc chắn được hỏi lại qua các vòng, không bỏ sót
+   câu nào (khác với chọn ngẫu nhiên có thể mãi không trúng 1 câu). */
+function beginReviewCycle(){
+  const remaining = lrn.allQs.map((_,i)=>i).filter(i=>!lrn.mastered.has(i));
+  if(remaining.length === 0){ endLearnSession(); return; }
+
+  lrn.phase = 'review';
+  lrn.queue = pickReviewBatch(remaining, LRN_GROUP);
+  lrn.queueIdx = 0;
+  lrn.roundNum++;
+  renderLearnQ();
+}
+
+/* ── Chọn 1 đợt câu để ôn, xoay vòng công bằng qua lrn.reviewCursor ──
+   Thay vì random.slice() (có thể luôn bỏ sót cùng 1 câu), ta đi tuần tự
+   qua danh sách candidates theo con trỏ, quay lại đầu khi hết — đảm bảo
+   100% các câu đều được hỏi lại đều nhau qua nhiều vòng. ──*/
+function pickReviewBatch(candidates, batchSize){
+  if(candidates.length === 0) return [];
+  if(typeof lrn.reviewCursor !== 'number') lrn.reviewCursor = 0;
+
+  // Nếu con trỏ đã vượt quá danh sách hiện tại (vì mastered nhiều câu, danh sách ngắn lại) → reset về đầu
+  if(lrn.reviewCursor >= candidates.length) lrn.reviewCursor = 0;
+
+  const n = Math.min(batchSize, candidates.length);
+  const batch = [];
+  let cursor = lrn.reviewCursor;
+  for(let i=0; i<n; i++){
+    batch.push(candidates[cursor]);
+    cursor = (cursor + 1) % candidates.length;
+  }
+  lrn.reviewCursor = cursor;
+  return shuffle(batch); // xáo trộn thứ tự hiển thị trong đợt, nhưng vẫn đảm bảo đã chọn đủ & công bằng
 }
 
 /* ── kết thúc toàn bộ session ── */
@@ -4254,6 +4289,7 @@ function flushLearnProgress(){
     queueIdx: lrn.queueIdx,
     newWrong: lrn.newWrong,
     reviewPool: lrn.reviewPool,
+    reviewCursor: lrn.reviewCursor,
     roundNum: lrn.roundNum,
     totalCorrect: lrn.totalCorrect,
     totalWrong: lrn.totalWrong,
