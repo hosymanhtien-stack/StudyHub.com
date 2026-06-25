@@ -654,6 +654,8 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .aff-course-check-row:hover{border-color:var(--border2)}
 .aff-course-check-row.checked{border-color:#ec4899;background:rgba(236,72,153,.08)}
 .aff-course-check-row input{width:16px;height:16px;accent-color:#ec4899;flex-shrink:0;cursor:pointer}
+.acc-course-info{flex:1;min-width:0}
+.acc-course-price{font-size:11.5px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.12);padding:3px 9px;border-radius:8px;flex-shrink:0;white-space:nowrap}
 .aff-order-total-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px 16px;margin:14px 0;display:flex;flex-direction:column;gap:6px}
 .aotb-row{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
 .aotb-row b{color:var(--text);font-size:13px}
@@ -864,6 +866,17 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .course-drop-zone{border:2px dashed var(--border);border-radius:16px;padding:36px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface)}
 .course-drop-zone:hover,.course-drop-zone.dragover{border-color:#f59e0b;background:rgba(245,158,11,.05)}
 .format-hint-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:12px;color:var(--muted);line-height:1.7;margin-top:18px}
+
+/* ─── COURSE EDIT MODAL ─── */
+.course-edit-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;display:none;align-items:center;justify-content:center;padding:20px}
+.course-edit-overlay.show{display:flex}
+.course-edit-modal{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;width:100%;max-width:420px;animation:fadeUp .25s ease}
+.course-edit-modal h3{font-size:16px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.course-edit-actions{display:flex;gap:10px;margin-top:8px}
+.course-edit-actions .admin-btn{flex:1}
+.admin-field{margin-bottom:14px}
+.admin-field label{display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px}
+.course-price-tag{font-size:11.5px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.25);padding:3px 10px;border-radius:10px;white-space:nowrap}
 
 /* ─── INTEGRATED AI CONVERTER ─── */
 .conv-step{display:flex;gap:16px;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid var(--border)}
@@ -1262,12 +1275,47 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
         </div>
       </div>
 
-      <!-- MANAGE EXISTING COURSES (delete) -->
+      <!-- MANAGE EXISTING COURSES (edit / delete) -->
       <div class="admin-section" id="tab-manageCourses">
         <div class="admin-card">
           <h2><svg class="ic"><use href="#ic-folder"></use></svg> Danh sách môn học</h2>
-          <p>Xem toàn bộ môn học hiện có trong StudyHub. Các môn do bạn thêm vào có thể xóa được.</p>
+          <p>Xem toàn bộ môn học hiện có trong StudyHub. Bấm "Sửa" để đổi tên, màu, hoặc giá Affiliate. Các môn do bạn thêm vào có thể xóa được.</p>
           <div id="courseListArea"></div>
+        </div>
+      </div>
+
+      <!-- EDIT COURSE MODAL -->
+      <div class="course-edit-overlay" id="courseEditOverlay" onclick="if(event.target===this)closeCourseEditModal()">
+        <div class="course-edit-modal">
+          <h3><svg class="ic"><use href="#ic-pencil"></use></svg> Sửa thông tin môn học</h3>
+          <input type="hidden" id="editCourseIdx"/>
+          <div class="admin-field">
+            <label>Tên môn học</label>
+            <input type="text" id="editCourseName" class="admin-input"/>
+          </div>
+          <div class="admin-form-row" style="grid-template-columns:1fr 1fr">
+            <div class="admin-field">
+              <label>Màu chủ đề</label>
+              <select id="editCourseColor" class="admin-input">
+                <option value="#6366f1">Indigo</option>
+                <option value="#0ea5e9">Sky</option>
+                <option value="#10b981">Emerald</option>
+                <option value="#f97316">Orange</option>
+                <option value="#a855f7">Purple</option>
+                <option value="#ec4899">Pink</option>
+                <option value="#eab308">Yellow</option>
+                <option value="#06b6d4">Cyan</option>
+              </select>
+            </div>
+            <div class="admin-field">
+              <label>Giá Affiliate (VNĐ)</label>
+              <input type="number" id="editCoursePrice" class="admin-input" min="0" step="1000"/>
+            </div>
+          </div>
+          <div class="course-edit-actions">
+            <button class="admin-btn secondary" onclick="closeCourseEditModal()">Hủy</button>
+            <button class="admin-btn primary" onclick="saveCourseEdit()"><svg class="ic"><use href="#ic-check"></use></svg> Lưu thay đổi</button>
+          </div>
         </div>
       </div>
 
@@ -2737,6 +2785,54 @@ async function loadCustomCourses(){
     console.warn('Could not load custom courses:', e);
   }
 }
+
+// ═══════════════════════════════════════
+//  COURSE SETTINGS (admin-editable price/name/color)
+//  Firestore: courseSettings/{courseCode} → { price, name, color, updatedAt }
+//  Áp dụng cho MỌI môn — cả 5 môn mặc định (hardcode trong COURSES) và
+//  môn do admin tự thêm bằng AI — vì admin có thể đổi tên/màu/giá bất kỳ môn nào.
+// ═══════════════════════════════════════
+let courseSettingsLoaded = false;
+const DEFAULT_COURSE_PRICE = 50000; // giá mặc định cho môn chưa được admin thiết lập riêng
+
+async function loadCourseSettings(){
+  if(courseSettingsLoaded) return;
+  courseSettingsLoaded = true;
+  try{
+    const snap = await db.collection('courseSettings').get();
+    const settingsByCode = {};
+    snap.forEach(doc=> settingsByCode[doc.id] = doc.data());
+
+    COURSES.forEach((c)=>{
+      const s = settingsByCode[c.code];
+      // Luôn đảm bảo có giá (mặc định nếu admin chưa từng đặt riêng)
+      c.price = (s && typeof s.price === 'number') ? s.price : DEFAULT_COURSE_PRICE;
+      if(s){
+        if(s.name)  c.name = s.name;
+        if(s.color){
+          c.color = s.color; c.colorName = s.color;
+          c.badge = s.color + '26'; c.textBadge = s.color;
+        }
+      }
+    });
+    // Đồng bộ lại COURSE_META (label dùng cho nav) theo tên/màu mới nhất
+    COURSE_META.forEach((cm,i)=>{
+      const c = COURSES[i];
+      if(!c) return;
+      cm.color = c.color;
+    });
+  }catch(e){
+    console.warn('Could not load course settings:', e);
+  }
+}
+
+// Lưu thiết lập riêng (giá/tên/màu) cho 1 môn — dùng cho cả môn mặc định và môn tự thêm
+async function saveCourseSetting(courseCode, partial){
+  await db.collection('courseSettings').doc(courseCode).set({
+    ...partial,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, {merge:true});
+}
 ;
 
 // ═══════════════════════════════════════
@@ -2812,6 +2908,7 @@ auth.onAuthStateChanged(async user => {
 
   // Load any admin-added courses before proceeding
   await loadCustomCourses();
+  await loadCourseSettings(); // áp dụng giá/tên/màu admin đã tùy chỉnh (nếu có) lên mọi môn
 
   // Live cache of all affiliate orders — needed by both admin and student chat views
   startAffOrdersCacheListener();
@@ -3583,7 +3680,9 @@ async function confirmAddCourse(){
 
     data._docId = docRef.id;
     const newIdx = COURSES.length;
-    COURSES.push(buildCourseObject(data, newIdx));
+    const newCourse = buildCourseObject(data, newIdx);
+    newCourse.price = DEFAULT_COURSE_PRICE; // Affiliate sẽ thấy giá này ngay, admin có thể sửa lại sau trong "Danh sách môn"
+    COURSES.push(newCourse);
     COURSE_META.push({code:data.code, color:data.color||'#6366f1', label:`${data.icon||'<svg class="ic"><use href="#ic-book-marked"></use></svg>'} ${data.code}`});
 
     showToast(`Đã thêm môn "${data.name}" (${data.questions.length} câu) vào StudyHub!`,'ok');
@@ -3604,9 +3703,61 @@ function renderCourseListAdmin(){
         <div style="font-weight:700">${c.name}</div>
         <div style="font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace">${c.code} · ${c.questions.length} câu hỏi ${c.isCustom?'· <span style="color:#f59e0b">Tự thêm</span>':'· <span style="color:var(--green)">Có sẵn</span>'}</div>
       </div>
+      <span class="course-price-tag">${formatVND(c.price||DEFAULT_COURSE_PRICE)}</span>
       <div style="font-size:12px;color:var(--muted)">${adminStudents.filter(s=>(s.courses||[]).includes(i)).length} học sinh</div>
+      <button class="admin-btn secondary" onclick="openCourseEditModal(${i})"><svg class="ic"><use href="#ic-pencil"></use></svg> Sửa</button>
       ${c.isCustom ? `<button class="admin-btn danger" onclick="deleteCustomCourse(${i},'${c.customId}','${c.name.replace(/'/g,"\\'")}')"><svg class="ic"><use href="#ic-trash-2"></use></svg> Xóa</button>` : '<span style="font-size:11px;color:var(--muted2);padding:6px 12px">Mặc định</span>'}
     </div>`).join('');
+}
+
+// ── Sửa tên / màu / giá của 1 môn học (áp dụng cho cả môn mặc định và môn tự thêm) ──
+function openCourseEditModal(idx){
+  const c = COURSES[idx];
+  if(!c) return;
+  document.getElementById('editCourseIdx').value = idx;
+  document.getElementById('editCourseName').value = c.name;
+  document.getElementById('editCourseColor').value = c.colorName && c.colorName.startsWith('#') ? c.colorName : '#6366f1';
+  document.getElementById('editCoursePrice').value = c.price || DEFAULT_COURSE_PRICE;
+  document.getElementById('courseEditOverlay').classList.add('show');
+}
+
+function closeCourseEditModal(){
+  document.getElementById('courseEditOverlay').classList.remove('show');
+}
+
+async function saveCourseEdit(){
+  const idx = parseInt(document.getElementById('editCourseIdx').value);
+  const c = COURSES[idx];
+  if(!c) return;
+
+  const newName = document.getElementById('editCourseName').value.trim();
+  const newColor = document.getElementById('editCourseColor').value;
+  const newPrice = parseInt(document.getElementById('editCoursePrice').value) || 0;
+
+  if(!newName){ showToast('Vui lòng nhập tên môn học.','err'); return; }
+  if(newPrice < 0){ showToast('Giá môn học không hợp lệ.','err'); return; }
+
+  try{
+    // Lưu vào Firestore — áp dụng cho cả môn mặc định (hardcode) và môn tự thêm,
+    // vì courseSettings là lớp "ghi đè" độc lập với nguồn gốc của môn.
+    await saveCourseSetting(c.code, {name:newName, color:newColor, price:newPrice});
+
+    // Cập nhật ngay trong bộ nhớ để admin thấy thay đổi tức thì, không cần tải lại trang
+    c.name = newName;
+    c.color = newColor; c.colorName = newColor;
+    c.badge = newColor + '26'; c.textBadge = newColor;
+    c.price = newPrice;
+
+    const cm = COURSE_META[idx];
+    if(cm) cm.color = newColor;
+
+    closeCourseEditModal();
+    showToast(`Đã lưu thay đổi cho môn "${newName}"`,'ok');
+    renderCourseListAdmin();
+    renderCourseMgmt();
+  } catch(e){
+    showToast('Lỗi khi lưu: '+e.message,'err');
+  }
 }
 
 async function deleteCustomCourse(idx, docId, name){
@@ -5301,13 +5452,11 @@ async function rejectAffiliateApp(uid, name){
 //      price, commission,
 //      createdAt, updatedAt }
 //
-//  Price: 50,000 VND / course. Commission: 40% = 20,000 VND.
+//  Giá mỗi môn do Admin tự đặt riêng (xem DEFAULT_COURSE_PRICE / courseSettings).
+//  Hoa hồng luôn cố định ở mức 40% trên TỔNG giá trị đơn hàng.
 // ═══════════════════════════════════════
 
-const AFF_COURSE_PRICE = 50000;
 const AFF_COMMISSION_RATE = 0.4;
-const AFF_COMMISSION_PER_COURSE = AFF_COURSE_PRICE * AFF_COMMISSION_RATE; // 20,000đ
-const AFF_PAYABLE_PER_COURSE = AFF_COURSE_PRICE - AFF_COMMISSION_PER_COURSE; // 30,000đ — what the affiliate transfers to StudyHub
 const MB_BANK_ACCOUNT = '0367031025';
 const MB_BANK_NAME = 'HO SY MANH TIEN';
 
@@ -5341,7 +5490,8 @@ function renderAffiliateDashboard(appData){
       </div>
       <div class="aff-order-total-box" id="affOrderTotalBox" style="display:none">
         <div class="aotb-row"><span>Số môn đã chọn</span><b id="aotbCount">0</b></div>
-        <div class="aotb-row"><span>Tổng hoa hồng nhận được</span><b id="aotbCommission" style="color:var(--gold)">0đ</b></div>
+        <div class="aotb-row"><span>Tổng giá trị đơn hàng</span><b id="aotbTotal">0đ</b></div>
+        <div class="aotb-row"><span>Tổng hoa hồng nhận được (40%)</span><b id="aotbCommission" style="color:var(--gold)">0đ</b></div>
         <div class="aotb-row"><span>Số tiền cần thanh toán</span><b id="aotbPayable">0đ</b></div>
       </div>
       <div class="aff-field">
@@ -5361,12 +5511,13 @@ function renderAffiliateDashboard(appData){
       <div id="affOrderHistory"><div class="admin-empty" style="padding:24px"><div class="ae-icon"><svg class="ic"><use href="#ic-inbox"></use></svg></div><p>Chưa có đơn hàng nào.</p></div></div>
     </div>`;
 
-  // Populate course checkboxes from live COURSES array
+  // Populate course checkboxes from live COURSES array — hiện kèm giá riêng từng môn
   const checksArea = document.getElementById('affOrderCourseChecks');
   checksArea.innerHTML = COURSES.map(function(c,i){
     return '<label class="aff-course-check-row" id="acc-wrap-'+i+'">'
       + '<input type="checkbox" value="'+i+'" class="aff-course-checkbox" onchange="updateAffOrderTotal()"/>'
-      + '<span>'+c.icon+' '+c.code+' — '+c.name+'</span>'
+      + '<span class="acc-course-info">'+c.icon+' '+c.code+' — '+c.name+'</span>'
+      + '<span class="acc-course-price">'+formatVND(c.price||DEFAULT_COURSE_PRICE)+'</span>'
       + '</label>';
   }).join('');
 
@@ -5382,6 +5533,8 @@ function renderAffiliateDashboard(appData){
 }
 
 // ── Live total calculation as affiliate checks/unchecks courses ──
+// Mỗi môn có thể có giá khác nhau (do admin tự đặt), nên tổng tiền phải
+// CỘNG DỒN giá thật của từng môn đã chọn — không nhân với 1 hằng số cố định nữa.
 function updateAffOrderTotal(){
   const checked = Array.from(document.querySelectorAll('.aff-course-checkbox:checked'));
   const count = checked.length;
@@ -5398,10 +5551,20 @@ function updateAffOrderTotal(){
     box.style.display = 'none';
     return;
   }
+
+  let totalPrice = 0;
+  checked.forEach(cb=>{
+    const course = COURSES[parseInt(cb.value)];
+    totalPrice += (course && course.price) ? course.price : DEFAULT_COURSE_PRICE;
+  });
+  const totalCommission = Math.round(totalPrice * AFF_COMMISSION_RATE);
+  const totalPayable = totalPrice - totalCommission;
+
   box.style.display = '';
   document.getElementById('aotbCount').textContent = count;
-  document.getElementById('aotbCommission').textContent = formatVND(count * AFF_COMMISSION_PER_COURSE);
-  document.getElementById('aotbPayable').textContent = formatVND(count * AFF_PAYABLE_PER_COURSE);
+  document.getElementById('aotbTotal').textContent = formatVND(totalPrice);
+  document.getElementById('aotbCommission').textContent = formatVND(totalCommission);
+  document.getElementById('aotbPayable').textContent = formatVND(totalPayable);
 }
 
 function renderAffiliateOwnStats(orders){
@@ -5477,21 +5640,27 @@ async function submitAffiliateOrder(){
   btn.innerHTML = '<svg class="ic"><use href="#ic-hourglass"></use></svg> Đang gửi...';
 
   try{
-    const selectedCourses = courseIdxs.map(i=>({idx:i, code:COURSES[i].code, name:COURSES[i].name}));
+    const selectedCourses = courseIdxs.map(i=>({
+      idx:i, code:COURSES[i].code, name:COURSES[i].name, price:COURSES[i].price||DEFAULT_COURSE_PRICE
+    }));
     const affiliateUid = currentUser.user.uid;
     const affiliateName = currentUser.data.name || currentUser.user.displayName || '';
     const affiliateEmail = currentUser.user.email;
-    const n = selectedCourses.length;
+
+    // Tổng tiền = cộng dồn giá thật của TỪNG môn đã chọn (mỗi môn có thể giá khác nhau)
+    const totalPrice = selectedCourses.reduce((sum,c)=>sum+c.price, 0);
+    const totalCommission = Math.round(totalPrice * AFF_COMMISSION_RATE);
+    const totalPayable = totalPrice - totalCommission;
 
     const orderRef = await db.collection('affiliateOrders').add({
       affiliateUid: affiliateUid, affiliateName: affiliateName, affiliateEmail: affiliateEmail,
       courseIdxs: courseIdxs,
-      courses: selectedCourses, // [{idx, code, name}, ...]
+      courses: selectedCourses, // [{idx, code, name, price}, ...]
       buyerName: buyerName, buyerEmail: buyerEmail,
       status: 'pending_admin',
-      price: AFF_COURSE_PRICE * n,
-      commission: AFF_COMMISSION_PER_COURSE * n,
-      payable: AFF_PAYABLE_PER_COURSE * n,
+      price: totalPrice,
+      commission: totalCommission,
+      payable: totalPayable,
       createdAt: firebase.firestore.FieldValue.serverTimestamp(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     });
@@ -5536,8 +5705,9 @@ function renderOrderCardHTML(order, viewerRole){
   }
 
   const st = AFF_STATUS_LABEL[order.status] || {label:order.status, cls:'pending'};
-  const courseList = (order.courses || []).map(c=>c.code).join(', ') || order.courseCode || '';
-  const courseListFull = (order.courses || []).map(c=>c.code+' — '+c.name).join('<br>') || (order.courseCode+' — '+order.courseName) || '';
+  const courseListFull = (order.courses || []).map(c=>
+    c.code+' — '+c.name+(typeof c.price==='number' ? ' <span style="color:var(--muted)">('+formatVND(c.price)+')</span>' : '')
+  ).join('<br>') || (order.courseCode+' — '+order.courseName) || '';
   const payableAmount = (typeof order.payable === 'number') ? order.payable : order.price; // fallback for any legacy single-course orders
 
   const header = ''
