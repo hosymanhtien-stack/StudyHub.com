@@ -10,7 +10,7 @@
 <meta property="og:type" content="website">
 <meta property="og:title" content="StudyHub — Phần mềm học tập, ôn luyện đề thi">
 <meta property="og:description" content="Ôn luyện trắc nghiệm thông minh: thẻ ghi nhớ, học ghi nhớ sâu, kiểm tra thử có tính giờ — đầy đủ các môn học.">
-<meta property="og:image" content="https://api.dicebear.com/7.x/shapes/png?seed=studyhub&backgroundColor=6366f1,0ea5e9,10b981">
+<meta property="og:image" content="https://studyhub-learning-com.vercel.app/og-image.png">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary">
@@ -1097,7 +1097,7 @@ function fallbackCopy(url, btn){
         <div class="dot" style="background:var(--acc3)"></div>
       </div>
       <h1>StudyHub</h1>
-      <p>Phần mền học tập, ôn luyện đề thi</p>
+      <p>MKG101 · ACC101 · ECO111 · SSA101 · ENG111</p>
     </div>
 
     <button class="google-btn" onclick="signInWithGoogle()">
@@ -2828,8 +2828,22 @@ const COURSES = [
 // ═══════════════════════════════════════
 //  DYNAMIC COURSES (added by Admin via JSON upload)
 //  Stored in Firestore collection 'customCourses'
+//
+//  QUAN TRỌNG — chống lệch index:
+//  Trước đây dùng 1 cờ boolean "đã load chưa" để chỉ gọi Firestore 1 lần.
+//  Nhưng trên mobile, khi người dùng chuyển app đi rồi quay lại sau nhiều giờ,
+//  Firebase Auth có thể tự kích hoạt lại onAuthStateChanged (token refresh) mà
+//  KHÔNG tải lại trang — lúc đó cờ vẫn = true nên không load lại, nhưng nếu vì
+//  lý do nào đó hàm vẫn chạy lại (race condition), nó sẽ PUSH THÊM vào cuối
+//  mảng COURSES đã có sẵn dữ liệu cũ → toàn bộ index từ đó lệch hẳn so với
+//  những gì admin/học sinh khác đang thấy → "tên đúng nhưng câu hỏi sai".
+//
+//  Giải pháp: luôn CẮT mảng về đúng độ dài gốc (chỉ 5 môn mặc định) trước khi
+//  build lại từ Firestore, và dùng 1 Promise cache để dù gọi đồng thời nhiều
+//  lần cũng chỉ thực sự fetch network 1 lần — không bao giờ bị nhân đôi dữ liệu.
 // ═══════════════════════════════════════
-let customCoursesLoaded = false;
+const STATIC_COURSES_COUNT = COURSES.length; // số môn mặc định, đo ngay lúc script khởi tạo — không đổi
+let customCoursesPromise = null;
 
 function buildCourseObject(meta, idx){
   // meta: {code, name, icon, color, questions:[{q,opts,ans,exp}]}
@@ -2852,21 +2866,42 @@ function buildCourseObject(meta, idx){
   };
 }
 
-async function loadCustomCourses(){
-  if(customCoursesLoaded) return;
-  customCoursesLoaded = true;
-  try{
-    const snap = await db.collection('customCourses').orderBy('createdAt','asc').get();
-    snap.forEach(doc=>{
-      const data = doc.data();
-      data._docId = doc.id;
-      const newIdx = COURSES.length;
-      COURSES.push(buildCourseObject(data, newIdx));
-      COURSE_META.push({code:data.code, color:data.color, label:`${data.icon||'<svg class="ic"><use href="#ic-book-marked"></use></svg>'} ${data.code}`});
-    });
-  }catch(e){
-    console.warn('Could not load custom courses:', e);
-  }
+function loadCustomCourses(){
+  // Promise cache: nhiều lời gọi cùng lúc (vd Auth trigger 2 lần liên tiếp)
+  // chỉ thực sự fetch Firestore 1 lần, mọi caller khác đợi chung kết quả đó.
+  if(customCoursesPromise) return customCoursesPromise;
+
+  customCoursesPromise = (async () => {
+    try{
+      const snap = await db.collection('customCourses').orderBy('createdAt','asc').get();
+
+      // Luôn cắt về đúng độ dài gốc trước khi build lại — đảm bảo gọi lại
+      // bao nhiêu lần cũng cho kết quả GIỐNG NHAU TUYỆT ĐỐI, không trùng lặp.
+      COURSES.length = STATIC_COURSES_COUNT;
+      COURSE_META.length = STATIC_COURSES_COUNT;
+
+      snap.forEach(doc=>{
+        const data = doc.data();
+        data._docId = doc.id;
+        const newIdx = COURSES.length;
+        COURSES.push(buildCourseObject(data, newIdx));
+        COURSE_META.push({code:data.code, color:data.color, label:`${data.icon||'<svg class="ic"><use href="#ic-book-marked"></use></svg>'} ${data.code}`});
+      });
+    }catch(e){
+      console.warn('Could not load custom courses:', e);
+      customCoursesPromise = null; // cho phép thử lại nếu lần này lỗi (vd mất mạng tạm thời)
+      throw e;
+    }
+  })();
+
+  return customCoursesPromise;
+}
+
+// Gọi hàm này sau khi admin thêm/xóa môn trong CHÍNH session đang mở, để các
+// tab/thiết bị khác (kể cả của chính admin nếu mở 2 tab) không bị lệch index
+// nếu vô tình load lại — ép buộc lần load tiếp theo phải fetch mới từ Firestore.
+function invalidateCustomCoursesCache(){
+  customCoursesPromise = null;
 }
 
 // ═══════════════════════════════════════
@@ -2875,38 +2910,44 @@ async function loadCustomCourses(){
 //  Áp dụng cho MỌI môn — cả 5 môn mặc định (hardcode trong COURSES) và
 //  môn do admin tự thêm bằng AI — vì admin có thể đổi tên/màu/giá bất kỳ môn nào.
 // ═══════════════════════════════════════
-let courseSettingsLoaded = false;
+let courseSettingsPromise = null;
 const DEFAULT_COURSE_PRICE = 50000; // giá mặc định cho môn chưa được admin thiết lập riêng
 
-async function loadCourseSettings(){
-  if(courseSettingsLoaded) return;
-  courseSettingsLoaded = true;
-  try{
-    const snap = await db.collection('courseSettings').get();
-    const settingsByCode = {};
-    snap.forEach(doc=> settingsByCode[doc.id] = doc.data());
+function loadCourseSettings(){
+  if(courseSettingsPromise) return courseSettingsPromise;
 
-    COURSES.forEach((c)=>{
-      const s = settingsByCode[c.code];
-      // Luôn đảm bảo có giá (mặc định nếu admin chưa từng đặt riêng)
-      c.price = (s && typeof s.price === 'number') ? s.price : DEFAULT_COURSE_PRICE;
-      if(s){
-        if(s.name)  c.name = s.name;
-        if(s.color){
-          c.color = s.color; c.colorName = s.color;
-          c.badge = s.color + '26'; c.textBadge = s.color;
+  courseSettingsPromise = (async () => {
+    try{
+      const snap = await db.collection('courseSettings').get();
+      const settingsByCode = {};
+      snap.forEach(doc=> settingsByCode[doc.id] = doc.data());
+
+      COURSES.forEach((c)=>{
+        const s = settingsByCode[c.code];
+        // Luôn đảm bảo có giá (mặc định nếu admin chưa từng đặt riêng)
+        c.price = (s && typeof s.price === 'number') ? s.price : DEFAULT_COURSE_PRICE;
+        if(s){
+          if(s.name)  c.name = s.name;
+          if(s.color){
+            c.color = s.color; c.colorName = s.color;
+            c.badge = s.color + '26'; c.textBadge = s.color;
+          }
         }
-      }
-    });
-    // Đồng bộ lại COURSE_META (label dùng cho nav) theo tên/màu mới nhất
-    COURSE_META.forEach((cm,i)=>{
-      const c = COURSES[i];
-      if(!c) return;
-      cm.color = c.color;
-    });
-  }catch(e){
-    console.warn('Could not load course settings:', e);
-  }
+      });
+      // Đồng bộ lại COURSE_META (label dùng cho nav) theo tên/màu mới nhất
+      COURSE_META.forEach((cm,i)=>{
+        const c = COURSES[i];
+        if(!c) return;
+        cm.color = c.color;
+      });
+    }catch(e){
+      console.warn('Could not load course settings:', e);
+      courseSettingsPromise = null;
+      throw e;
+    }
+  })();
+
+  return courseSettingsPromise;
 }
 
 // Lưu thiết lập riêng (giá/tên/màu) cho 1 môn — dùng cho cả môn mặc định và môn tự thêm
@@ -3598,14 +3639,56 @@ function parseAIJsonResponse(textContent){
   return [];
 }
 
+// ── Loại bỏ watermark/ghi chú tác giả khỏi nội dung trước khi lưu ──
+// Quét và xóa các biến thể phổ biến của cụm "soạn bởi Thủy Tiên" / "Thủy Tiên"
+// (không phân biệt hoa/thường, có/không dấu câu kèm theo), để dữ liệu câu hỏi
+// nạp vào StudyHub luôn sạch, không dính tên người soạn đề gốc.
+//
+// LƯU Ý KỸ THUẬT: dùng literal "Thủy" / "Tiên" trực tiếp (không tự dựng
+// character class kiểu [uú]) vì mỗi nguyên âm tiếng Việt có dấu thanh riêng
+// (ủ ≠ ú ≠ ư...) — character class viết tay rất dễ thiếu biến thể và khiến
+// regex không khớp được gì cả. Đồng thời \b (word boundary) trong JS chỉ
+// hiểu ASCII nên không dùng được cho tiếng Việt — phải tự kiểm tra biên bằng
+// negative lookaround trên danh sách chữ cái tiếng Việt đầy đủ.
+const VN_LETTERS_FOR_BOUNDARY = 'a-zA-Zàáảãạăằắẳẵặâầấẩẫậđèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵ';
+const WATERMARK_NAME = 'Th\u1ee7y\\s*Ti\u00ean'; // "Thủy" + khoảng trắng linh hoạt + "Tiên"
+
+const WATERMARK_PATTERNS = [
+  // Các cụm có ngữ cảnh từ khóa rõ ràng — luôn an toàn để xóa
+  new RegExp(`\\(?\\s*so\u1ea1n\\s+b\u1edfi\\s*:?\\s*${WATERMARK_NAME}\\s*\\)?`, 'gi'),
+  new RegExp(`\\(?\\s*bi\u00ean\\s+so\u1ea1n\\s*:?\\s*${WATERMARK_NAME}\\s*\\)?`, 'gi'),
+  new RegExp(`\\(?\\s*by\\s*:?\\s*${WATERMARK_NAME}\\s*\\)?`, 'gi'),
+  // " - Thủy Tiên" ở cuối cụm (dấu gạch ngang ngay trước tên)
+  new RegExp(`[-\u2013\u2014]\\s*${WATERMARK_NAME}(?![${VN_LETTERS_FOR_BOUNDARY}])`, 'gi'),
+  // Tên đứng riêng lẻ — chỉ xóa khi KHÔNG có thêm 2 chữ cái liền sau (để tránh
+  // xóa nhầm vào giữa 1 tên người dài hơn như "Thủy Tiên Nguyễn" xuất hiện
+  // trong chính nội dung câu hỏi, không phải watermark của người soạn đề).
+  new RegExp(`(?<![${VN_LETTERS_FOR_BOUNDARY}])${WATERMARK_NAME}(?![${VN_LETTERS_FOR_BOUNDARY}\\s][${VN_LETTERS_FOR_BOUNDARY}])`, 'gi')
+];
+
+function stripWatermark(text){
+  if(!text) return text;
+  let cleaned = String(text);
+  WATERMARK_PATTERNS.forEach(pattern=>{
+    cleaned = cleaned.replace(pattern, '');
+  });
+  // Dọn lại khoảng trắng/dấu câu thừa còn sót sau khi xóa (vd "Câu hỏi  ." hoặc "Câu hỏi ()")
+  cleaned = cleaned
+    .replace(/\(\s*\)/g, '')      // dấu ngoặc rỗng còn sót lại
+    .replace(/\s{2,}/g, ' ')      // nhiều khoảng trắng liên tiếp
+    .replace(/\s+([.,;:!?])/g, '$1') // khoảng trắng dư trước dấu câu
+    .trim();
+  return cleaned;
+}
+
 function cleanQuestions(arr){
   return arr
     .filter(q => q.q && Array.isArray(q.opts) && q.opts.length >= 2)
     .map(q => ({
-      q: String(q.q).trim(),
-      opts: q.opts.map(o=>String(o).trim()),
+      q: stripWatermark(String(q.q).trim()),
+      opts: q.opts.map(o=>stripWatermark(String(o).trim())),
       ans: typeof q.ans === 'number' ? q.ans : -1,
-      exp: q.exp ? String(q.exp).trim() : '',
+      exp: q.exp ? stripWatermark(String(q.exp).trim()) : '',
       uncertain: q.ans === -1 || q.uncertain === true
     }));
 }
@@ -3767,6 +3850,7 @@ async function confirmAddCourse(){
     newCourse.price = DEFAULT_COURSE_PRICE; // Affiliate sẽ thấy giá này ngay, admin có thể sửa lại sau trong "Danh sách môn"
     COURSES.push(newCourse);
     COURSE_META.push({code:data.code, color:data.color||'#6366f1', label:`${data.icon||'<svg class="ic"><use href="#ic-book-marked"></use></svg>'} ${data.code}`});
+    invalidateCustomCoursesCache(); // các tab/phiên khác load lại sau đây sẽ fetch mới, không dùng cache cũ thiếu môn này
 
     showToast(`Đã thêm môn "${data.name}" (${data.questions.length} câu) vào StudyHub!`,'ok');
     cancelCourseUpload();
@@ -3868,6 +3952,7 @@ async function deleteCustomCourse(idx, docId, name){
       }
     });
     await batch.commit();
+    invalidateCustomCoursesCache(); // các tab/phiên khác load lại sau đây sẽ fetch mới, khớp đúng index đã shift
 
     showToast(`Đã xóa môn "${name}"`,'ok');
     renderCourseListAdmin();
