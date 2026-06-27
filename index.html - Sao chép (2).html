@@ -5646,8 +5646,8 @@ async function rejectAffiliateApp(uid, name){
 // ═══════════════════════════════════════
 
 const AFF_COMMISSION_RATE = 0.4;
-const MB_BANK_ACCOUNT = '0367031025';
-const MB_BANK_NAME = 'HO SY MANH TIEN';
+const VIETIN_BANK_ACCOUNT = '10488390024';
+const VIETIN_BANK_NAME = 'HUYNH QUANG TIEN';
 
 function formatVND(n){
   return n.toLocaleString('vi-VN') + 'đ';
@@ -5951,9 +5951,9 @@ function renderOrderCardHTML(order, viewerRole){
     actions = ''
       + '<div class="coc-payment-box">'
       + '<div class="cpb-title"><svg class="ic"><use href="#ic-landmark"></use></svg> Thông tin chuyển khoản</div>'
-      + '<div class="cpb-row"><span>Ngân hàng</span><b>MB Bank</b></div>'
-      + '<div class="cpb-row"><span>Số tài khoản</span><b>' + MB_BANK_ACCOUNT + '</b></div>'
-      + '<div class="cpb-row"><span>Chủ tài khoản</span><b>' + MB_BANK_NAME + '</b></div>'
+      + '<div class="cpb-row"><span>Ngân hàng</span><b>VIETIN Bank</b></div>'
+      + '<div class="cpb-row"><span>Số tài khoản</span><b>' + VIETIN_BANK_ACCOUNT + '</b></div>'
+      + '<div class="cpb-row"><span>Chủ tài khoản</span><b>' + VIETIN_BANK_NAME + '</b></div>'
       + '<div class="cpb-row"><span>Số tiền cần thanh toán</span><b>' + formatVND(payableAmount) + '</b></div>'
       + '</div>'
       + '<button class="admin-btn primary" style="width:100%" onclick="studentMarkPaid(\'' + order.id + '\')"><svg class="ic"><use href="#ic-check"></use></svg> Tôi đã thanh toán</button>';
