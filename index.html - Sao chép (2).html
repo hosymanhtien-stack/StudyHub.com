@@ -3984,7 +3984,28 @@ function showToast(msg,type='ok'){
 let activeCourse = 0;
 let activeMode = null; // 'home' | 'flashcard' | 'learn' | 'test'
 // per-course session stats
-const session = COURSES.map(()=>({learned:0, correct:0, wrong:0}));
+//
+// QUAN TRỌNG: KHÔNG dùng "COURSES.map(...)" tĩnh ở đây — vì dòng này thực thi
+// NGAY LẬP TỨC lúc browser parse script (đồng bộ), trong khi các môn học do
+// admin tự thêm (qua AI Converter) chỉ được nạp vào COURSES SAU ĐÓ, bên trong
+// loadCustomCourses() — một hàm async chạy bên trong callback onAuthStateChanged
+// (chỉ kích hoạt sau khi đăng nhập xong). Nói cách khác: lúc dòng "session = ..."
+// chạy, COURSES mới chỉ có 5 môn mặc định — snapshot 1 mảng cố định 5 phần tử.
+//
+// Hậu quả: khi học sinh bấm vào môn mới (index 5, 6, 7...), session[idx] trả về
+// undefined → mọi chỗ gọi s.learned / s.correct / s.wrong sẽ làm crash hàm
+// showCourseHome() giữa đường → màn hình không hiển thị được gì cho môn đó,
+// trong khi tên môn ở thanh điều hướng vẫn hiện đúng (vì COURSE_META là mảng
+// được PUSH thêm động, không bị giới hạn độ dài như session).
+//
+// Giải pháp: dùng object thường (không phải Array cố định độ dài) + hàm
+// getSession() tự khởi tạo "lười" (lazy) cho bất kỳ index nào lần đầu được
+// hỏi tới — hoạt động đúng dù COURSES có bao nhiêu môn, thêm vào lúc nào.
+const session = {};
+function getSession(idx){
+  if(!session[idx]) session[idx] = {learned:0, correct:0, wrong:0};
+  return session[idx];
+}
 
 // ═══════════════════════════════════════
 //  NAVIGATION
@@ -4007,7 +4028,7 @@ function showCourseHome(){
   if(activeMode === 'learn') flushLearnProgress();
   activeMode = 'home';
   const c = COURSES[activeCourse];
-  const s = session[activeCourse];
+  const s = getSession(activeCourse);
   const total = c.questions.length;
   // Tiến độ hiển thị tạm thời theo RAM trong lúc chờ tải số liệu thật từ Firestore (tránh nhấp nháy 0%→đúng số)
   const pctPlaceholder = total>0? Math.round(s.learned/total*100):0;
@@ -4087,7 +4108,7 @@ async function checkAndShowResumeBadge(courseCode){
     pctEl.textContent = Math.round(seenCount/total*100) + '%';
   }
   // Đồng bộ luôn vào session RAM để các lần render khác trong session này cũng đúng
-  if(session[activeCourse]) session[activeCourse].learned = Math.max(session[activeCourse].learned, seenCount);
+  getSession(activeCourse).learned = Math.max(getSession(activeCourse).learned, seenCount);
 
   const badge = document.getElementById('lrnResumeBadge');
   if(!badge) return;
@@ -4451,9 +4472,9 @@ function endLearnSession(){
   const masteredCount = lrn.mastered.size;
   const pct = Math.round(masteredCount/total*100);
 
-  session[activeCourse].correct += lrn.totalCorrect;
-  session[activeCourse].wrong   += lrn.totalWrong;
-  session[activeCourse].learned  = total;
+  getSession(activeCourse).correct += lrn.totalCorrect;
+  getSession(activeCourse).wrong   += lrn.totalWrong;
+  getSession(activeCourse).learned  = total;
 
   // Đã thuộc hết toàn bộ câu hỏi — không cần lưu tiến trình resume nữa
   clearLearnProgress(c.code);
@@ -4610,7 +4631,7 @@ function checkLearnQ(sel, correct, qIdx, btn){
     document.getElementById('fb').after(expDiv);
   }
 
-  session[activeCourse].learned = Math.max(session[activeCourse].learned, lrn.seen.size);
+  getSession(activeCourse).learned = Math.max(getSession(activeCourse).learned, lrn.seen.size);
   document.getElementById('nextLrnBtn').className='next-btn show';
   saveLearnProgress();
 }
@@ -4774,8 +4795,8 @@ function showTestResults(){
   const grade = pct>=90?'A (Xuất sắc)':pct>=80?'B (Giỏi)':pct>=70?'C (Khá)':pct>=60?'D (Trung bình)':'F (Chưa đạt)';
   const gradeColor = pct>=80?'var(--green)':pct>=60?'var(--gold)':'var(--red)';
 
-  session[activeCourse].correct += correct;
-  session[activeCourse].wrong += wrong;
+  getSession(activeCourse).correct += correct;
+  getSession(activeCourse).wrong += wrong;
 
   // Build one review card per question (showing all answer options)
   function buildReviewCard(item){
