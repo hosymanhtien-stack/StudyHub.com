@@ -4350,10 +4350,10 @@ function renderLearnQ(){
     ? '<svg class="ic"><use href="#ic-repeat"></use></svg> Ôn lại câu sai'
     : `<svg class="ic"><use href="#ic-star"></use></svg> Ôn tổng hợp · Vòng ${lrn.roundNum}`;
   const phaseColor = lrn.phase==='new'
-    ? c.color
+    ? (c.colorName || c.color)
     : lrn.phase==='retry'
-    ? 'var(--red)'
-    : 'var(--gold)';
+    ? '#ef4444'
+    : '#f59e0b';
   const phaseBg = lrn.phase==='new'
     ? c.badge
     : lrn.phase==='retry'
