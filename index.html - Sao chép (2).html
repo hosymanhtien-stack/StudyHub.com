@@ -1083,9 +1083,8 @@ function fallbackCopy(url, btn){
 
 
 <!-- ══════════ LOADING ══════════ -->
-<div class="fb-loading" id="fbLoading">
+<div class="fb-loading" id="fbLoading" style="display:none">
   <div class="fb-spinner"></div>
-  <p>Đang kết nối StudyHub…</p>
 </div>
 
 <!-- ══════════ LOGIN ══════════ -->
@@ -2814,7 +2813,9 @@ let auth, db;
   startAuthListener();
 }).catch(err=>{
   console.error('Firebase SDK load failed:', err);
-  document.getElementById('fbLoading').innerHTML =
+  const fbLoadEl = document.getElementById('fbLoading');
+  fbLoadEl.style.display = 'block';
+  fbLoadEl.innerHTML =
     '<div style="text-align:center;color:#ef4444;padding:40px"><div style="font-size:48px;margin-bottom:16px"><svg class="ic"><use href="#ic-alert-triangle"></use></svg></div><p style="font-size:15px;font-weight:600">Không thể kết nối Firebase</p><p style="font-size:13px;color:#6b6884;margin-top:8px">Vui lòng kiểm tra kết nối mạng và thử lại.</p><button onclick="location.reload()" style="margin-top:20px;padding:10px 24px;background:#6366f1;border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer"><svg class="ic"><use href="#ic-rotate-ccw"></use></svg> Thử lại</button></div>';
 });
 
