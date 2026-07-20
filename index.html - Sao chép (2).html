@@ -180,6 +180,7 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .nav-btn.active[data-course="3"]{background:rgba(16,185,129,.18);color:#34d399}
 .nav-btn.active[data-course="4"]{background:rgba(249,115,22,.18);color:#fb923c}
 .nav-btn.active[data-course="5"]{background:rgba(236,72,153,.18);color:#f472b6}
+.nav-btn.active[data-course="6"]{background:rgba(34,197,94,.18);color:#4ade80}
 .nav-btn.active[data-course="3"]{background:rgba(251,146,60,.18);color:#fb923c}
 .nav-btn.active[data-course="4"]{background:rgba(168,85,247,.18);color:#c084fc}
 .nav-right{display:flex;align-items:center;gap:12px;margin-left:auto}
@@ -1059,6 +1060,7 @@ function fallbackCopy(url, btn){
 <symbol id="ic-trending-up" viewBox="0 0 24 24"><path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/></symbol>
 <symbol id="ic-languages" viewBox="0 0 24 24"><path d="m5 8 6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"/></symbol>
 <symbol id="ic-grip-vertical" viewBox="0 0 24 24"><circle cx="9" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="5" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="9" cy="19" r="1.2" fill="currentColor" stroke="none"/><circle cx="15" cy="19" r="1.2" fill="currentColor" stroke="none"/></symbol>
+<symbol id="ic-code" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></symbol>
 <symbol id="ic-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></symbol>
 <symbol id="ic-shopping-bag" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18M16 10a4 4 0 0 1-8 0"/></symbol>
 <symbol id="ic-users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
@@ -1523,6 +1525,7 @@ function fallbackCopy(url, btn){
       <button class="nav-btn" data-course="3" onclick="selectCourse(3)"><svg class="ic"><use href="#ic-chart-bar"></use></svg> ECO102</button>
       <button class="nav-btn" data-course="4" onclick="selectCourse(4)"><svg class="ic"><use href="#ic-cpu"></use></svg> SDI101</button>
       <button class="nav-btn" data-course="5" onclick="selectCourse(5)"><svg class="ic"><use href="#ic-layers"></use></svg> CEA201</button>
+      <button class="nav-btn" data-course="6" onclick="selectCourse(6)"><svg class="ic"><use href="#ic-code"></use></svg> PRF193</button>
     </div>
     <div class="nav-right">
       <button class="theme-toggle-btn" onclick="toggleTheme()" id="themeToggleBtnStudent" title="Đổi giao diện sáng/tối"><svg class="ic"><use href="#ic-moon"></use></svg></button>
@@ -3380,6 +3383,154 @@ const COURSES = [
     {q:'Which of the following statements is true for Von Neumann architecture?', opts:['Shared bus between the program memory and data memory', 'Separate bus between the program memory and data memory', 'External bus for program memory and data memory', 'External bus for data memory only'], ans:0},
     {q:'Which of the following components was used in the first ENIAC computer?', opts:['Bipolar transistors', 'Field transistors', 'Vacuum tubes', 'Semiconductor los'], ans:2}
     ]
+  },
+  {
+    id: 6, code: 'PRF193', name: 'Lập Trình C/C++',
+    color: 'var(--acc6)', colorName: '#22c55e', badge: 'rgba(34,197,94,.15)', textBadge: '#4ade80',
+    icon: '<svg class="ic"><use href="#ic-code"></use></svg>', emoji: '💻',
+    questions: [
+
+    {q:'Which of the following correctly opens a file named "output.txt" for writing using an ofstream object fout?', opts:['fout.open("output.txt", ios::in);', 'fout.open("output.txt", ios::out);', 'fout.open("output.txt", ios::app);', 'fout.open("output.txt", ios::binary);'], ans:1},
+    {q:'How do you open a file named "data.txt" for reading using an ifstream object fin?', opts:['fin.open("data.txt", ios::out);', 'fin.open("data.txt", ios::in);', 'fin.open("data.txt", ios::app);', 'fin.open("data.txt", ios::binary);'], ans:1},
+    {q:'Which of the following correctly declares an iterator for a map<string, int>?', opts:['map<string, int>::iterator it;', 'iterator<map<string, int>> it;', 'map::iterator<string, int> it;', 'it map<string, int>::iterator;'], ans:0},
+    {q:'What is the primary advantage of using STL algorithms over writing your own algorithms?', opts:['STL algorithms are always faster', 'STL algorithms provide a consistent and optimized way to perform common operations', 'STL algorithms require less memory', 'STL algorithms are easier to understand'], ans:1},
+    {q:'What is an abstract class in C++?', opts:['A class that cannot have any member functions', 'A class that cannot be instantiated and contains at least one pure virtual function', 'A class that has only static members', 'A class that inherits from another class'], ans:1},
+    {q:'Which keyword is used to inherit a base class publicly in C++?', opts:['inherit', 'publicly', 'public', 'private'], ans:2},
+    {q:'What is the purpose of a copy constructor in a C++ class?', opts:['To initialize an object with default values', 'To copy the attributes of one object to another, ensuring deep copying if necessary', 'To destroy an object', 'To overload the assignment operator'], ans:1},
+    {q:'In multithreading, what is the purpose of a mutex?', opts:['To create new threads', 'To synchronize access to shared resources', 'To terminate threads', 'To allocate memory dynamically'], ans:1},
+    {q:'How do you overload the + operator for a class Complex in C++?', opts:['Complex operator+(Complex a, Complex b) { Complex result; result.real = a.real + b.real; result.imag = a.imag + b.imag; return result; }', 'void operator+(Complex a, Complex b) {}', 'Complex + (Complex a, Complex b) {}', 'friend Complex operator+(Complex a, Complex b);'], ans:0},
+    {q:'What is encapsulation in OOP?', opts:['Inheriting properties from another class', 'Hiding the internal state of an object and requiring all interaction to be performed through an object\'s methods', 'Allowing multiple classes to have the same method names', 'Creating objects dynamically at runtime'], ans:1},
+    {q:'What is inheritance in OOP?', opts:['Encapsulating data and methods within a class', 'Creating multiple instances of a class', 'Deriving a new class from an existing class, inheriting its attributes and behaviors', 'Overloading functions within a class'], ans:2},
+    {q:'Which access specifier allows class members to be accessible from outside the class?', opts:['private', 'protected', 'public', 'static'], ans:2},
+    {q:'What is a pure virtual function in C++?', opts:['A function that has no implementation and must be overridden in derived classes', 'A function that cannot be overridden', 'A function that returns nothing', 'A function that can only be called by static objects'], ans:0},
+    {q:'Which keyword is used to inherit publicly from a base class Animal in C++?', opts:['inherits', 'publicly', 'public', 'protected'], ans:2},
+    {q:'Which of the following statements correctly creates a pointer to an object car1 of class Car and allocates memory dynamically?', opts:['Car *carPtr = Car();', 'Car *carPtr = new Car();', 'Car carPtr = new Car;', 'Car carPtr = Car;'], ans:1},
+    {q:'How can you ensure that a member function in a base class can be overridden in derived classes to achieve runtime polymorphism?', opts:['Declare the function as static', 'Declare the function as virtual', 'Use the override keyword', 'Make the function const'], ans:1},
+    {q:'What is the primary purpose of a copy constructor in a C++ class?', opts:['To allocate memory dynamically', 'To initialize an object by copying data from another object of the same class', 'To delete an object', 'To overload the assignment operator'], ans:1},
+    {q:'Which of the following correctly uses the pow function from the <cmath> library?', opts:['pow(2, 3)', 'pow(2.0, 3.0)', 'pow(x, y) where x and y are integers', 'All of the others'], ans:3},
+    {q:'What is the correct way to call the function add with arguments 5 and 10?', opts:['add(5, 10);', 'add = 5, 10;', 'add <- 5, 10;', 'call add(5, 10);'], ans:0},
+    {q:'Which of the following is a correct way to dynamically allocate memory for an array of 5 integers in C++?', opts:['int* array = new int[5];', 'int array = new int[5];', 'int* array = malloc(5 * sizeof(int));', 'int* array = new int(5);'], ans:0},
+    {q:'Which of the following statements correctly frees dynamically allocated memory pointed to by ptr?', opts:['delete ptr;', 'free(ptr);', 'All of the others', 'ptr = NULL;'], ans:0},
+    {q:'How do you pass a variable by reference to a function in C++?', opts:['func(int a)', 'func(int &a)', 'func(int* a)', 'func(&a)'], ans:1},
+    {q:'Which of the following is a value-returning function in C++?', opts:['void display(int a) { cout << a; }', 'int add(int a, int b) { return a + b; }', 'int main() { // code }', 'bool check(int a) { // no return statement }'], ans:1},
+    {q:'Which of the following statements correctly declares a function prototype for a function named multiply that takes two double parameters and returns a double?', opts:['double multiply(double a, double b) { }', 'double multiply(double a, double b);', 'void multiply(double a, double b);', 'multiply(double a, double b) double;'], ans:1},
+    {q:'What does the free function do in C/C++?', opts:['Allocates memory', 'Deallocates previously allocated memory', 'Resizes allocated memory', 'Copies memory'], ans:1},
+    {q:'Which of the following C/C++ statements correctly initializes an array with the values 1, 2, 3, 4, 5?', opts:['int arr[] = {1, 2, 3, 4, 5};', 'int arr[5] = {1, 2, 3, 4, 5};', 'int arr[5] = (1, 2, 3, 4, 5);', 'All of the others'], ans:3},
+    {q:'Which of the following correctly uses the enum to define colors and assigns Green to a variable c?', opts:['enum Color { Red, Green, Blue }; Color c = Green;', 'enum Color { Red, Green, Blue }; c = Green;', 'enum Color { Red = 1, Green = 2, Blue = 3 }; Color c = 2;', 'All of the others'], ans:0},
+    {q:'Which of the following correctly defines an enumeration for the days of the week in C/C++?', opts:['enum Days { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days = { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days; Days { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days (Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday);'], ans:0},
+    {q:'What is the purpose of the typedef keyword in C++?', opts:['To create a new type that is identical to an existing type', 'To declare a constant value', 'To define a macro', 'To allocate dynamic memory'], ans:0},
+    {q:'Which of the following is true about C++ std::string compared to C-style strings?', opts:['std::string automatically manages memory for string operations.', 'C-style strings are objects with member functions.', 'std::string requires manual handling of the null terminator.', 'C-style strings support operator overloading for concatenation.'], ans:0},
+    {q:'How do you access the third element of an array named numbers?', opts:['numbers(3)', 'numbers[2]', 'numbers[3]', 'numbers{3}'], ans:1},
+    {q:'Which of the following functions is used to concatenate two C-style strings?', opts:['stropy()', 'strlen()', 'strcat()', 'strcmp()', 'strncpy()'], ans:2},
+    {q:'What is the output of the following C++ code snippet? #include <iostream> using namespace std; struct Point { int x; int y; }; int main() { Point p1 = {10, 20}; Point p2; p2 = p1; cout << p2.x << " " << p2.y; return 0; }', opts:['10 20', '0 0', 'p1.x p1.y', 'Compilation Error'], ans:0},
+    {q:'What is the purpose of the continue statement in a loop?', opts:['To skip the current iteration and continue with the next one', 'To terminate the loop immediately', 'To pause the loop temporarily', 'To restart the loop from the beginning'], ans:0},
+    {q:'Which of the following control structures is used to execute a block of code multiple times based on a condition?', opts:['if', 'switch', 'for', 'break'], ans:2},
+    {q:'What is the purpose of the continue statement in a loop?', opts:['To exit the loop immediately', 'To skip the current iteration and proceed to the next one', 'To pause the loop', 'To restart the loop'], ans:1},
+    {q:'Which loop structure ensures that the loop body is executed at least once?', opts:['for loop', 'while loop', 'do...while loop', 'foreach loop'], ans:2},
+    {q:'Which loop construct is particularly useful when the number of iterations is determined by user input during the loop\'s execution?', opts:['for loop', 'while loop', 'do-while loop', 'foreach loop'], ans:2},
+    {q:'What will be the output of the following C code snippet? #include <stdio.h> int main() { int x = 10; if (x > 5) { if (x > 15) { printf("High"); } else { printf("Medium"); } } else { printf("Low"); } return 0; }', opts:['High', 'Medium', 'Low', 'No output'], ans:1},
+    {q:'What is the output of the following C++ code snippet? #include <iostream> using namespace std; int main() { int a = 5; int b = 3; cout << float(a/b); return 0; }', opts:['1', '1.6666...', '2', 'Compilation Error'], ans:0},
+    {q:'What is the correct syntax to declare an integer variable named count in C++?', opts:['int count;', 'integer count;', 'num count;', 'count int;'], ans:0},
+    {q:'Which of the following best describes type casting in C/C++?', opts:['Changing the type of a variable permanently', 'Converting a variable from one type to another temporarily', 'Declaring a new type', 'Assigning a value to a constant'], ans:1},
+    {q:'Which of the following C++ operators is used for bitwise OR operator?', opts:['||', '|', '&&', '&', '^', '!'], ans:1},
+    {q:'Which of the following operators is used for logical OR in C/C++?', opts:['||', '|', '&&', '&', '^', '!'], ans:0},
+    {q:'Which of the following is the correct way to declare a boolean variable in C++?', opts:['bool isTrue = true;', 'boolean isTrue = true;', 'bool isTrue = 1;', 'bool isTrue = T;', 'All of the others'], ans:0},
+    {q:'How to compare the values of two variables, a and b, in C++?', opts:['a = &b;', 'a == b;', 'a = b;', 'a := b;'], ans:1},
+    {q:'What is the primary purpose of a compiler in C/C++ programming?', opts:['To execute the program', 'To translate high-level code into machine code', 'To manage memory allocation', 'To provide a user interface'], ans:1},
+    {q:'What does the #include <iostream> directive do in a C++ program?', opts:['Includes the standard input/output stream library', 'Includes the integer manipulation library', 'Includes the string handling library', 'Includes the file handling library'], ans:0},
+    {q:'What is the correct syntax to output "Hello, World!" in C/C++?', opts:['printf("Hello, World!");', 'cout << "Hello, World!" << endl;', 'System.out.println("Hello, World!");', 'echo "Hello, World!";'], ans:0},
+    {q:'Which of the following is a bitwise XOR operator in C/C++?', opts:['^', '&&', '||', '&', '|', '~'], ans:0},
+    {q:'Which of the following correctly declares an integer array of size 5 in C/C++?', opts:['int arr[5];', 'array int arr = [5];', 'int arr = new int[5];', 'int arr{5};'], ans:0},
+    {q:'What is the correct file extension for a C source file?', opts:['.c', '.cpp', '.java', '.py'], ans:0},
+    {q:'In C/C++, what is the significance of the main() function?', opts:['It is an optional function where program execution can begin.', 'It is the entry point of every C/C++ program where execution starts.', 'It is used to declare global variables.', 'It is used to handle exceptions.'], ans:1},
+    {q:'What is the default underlying type of enumeration constants in C/C++?', opts:['char', 'int', 'float', 'double'], ans:1},
+    {q:'How can you access the member age of a structure variable student?', opts:['student->age', 'student.age', 'student[age]', 'student::age'], ans:1},
+    {q:'How can you determine the length of a C++ std::string named str?', opts:['str.length()', 'str.size()', 'All of the others', 'strlen(str)'], ans:2},
+    {q:'What is the result of the following code? printf("%d", strcmp("abc", "abd"));', opts:['-1', '1', '0', 'Undefined'], ans:0},
+    {q:'Given the following declaration: enum Day { MON, TUE, WED, THU, FRI, SAT, SUN }; What is the default value of FRI?', opts:['4', '2', '3', '5'], ans:0},
+    {q:'Which of the following is NOT a member function of the vector container?', opts:['push_back()', 'erase()', 'find()', 'size()'], ans:2},
+    {q:'Which header houses file-stream classes?', opts:['<fstream>', '<file>', '<stream>', '<iostream>'], ans:0},
+    {q:'Which of the following statements related to the process is true?', opts:['A process has a self-contained execution environment.', 'The processes can\'t work independently and depend on other processes.', 'The processes are executing concurrently, and the CPU switches between processes quickly: this is called process switching.', 'A process is only composed of one thread.'], ans:0},
+    {q:'What is the correct way to sort a vector<string> named words in descending order using an STL algorithm?', opts:['sort(words.begin(), words.end());', 'sort(words.begin(), words.end(), greater<string>());', 'sort(words.begin(), words.end(), less<string>());', 'sort(words.begin(), words.end(), reverse);'], ans:1},
+    {q:'Which member function opens a file?', opts:['open()', 'start()', 'connect()', 'init()'], ans:0},
+    {q:'What is the purpose of the return statement in a value-returning function?', opts:['To terminate the program', 'To exit the function without returning a value', 'To pass the computed value back to the caller', 'To declare a new variable'], ans:2},
+    {q:'What will be the output of the following C++ code snippet? #include <iostream> using namespace std; void modify(int &a) { a = a + 10; } int main() { int x = 5; modify(x); cout << x; return 0; }', opts:['5', '10', '15', 'Error'], ans:2},
+    {q:'Which of the following is a correct way to call a function named compute that takes no arguments and returns an int?', opts:['compute;', 'int result = compute();', 'int result = compute;', 'compute(int);'], ans:1},
+    {q:'Given the following code: void swap(int x, int y) { int temp = x; x = y; y = temp; } int main() { int a = 3, b = 5; swap(a, b); cout << a << " " << b; } What is the output?', opts:['3 5', '5 3', '0 0', 'Compilation error'], ans:0},
+    {q:'Which of the following is true about C/C++ templates?', opts:['They allow functions and classes to operate with generic types', 'They are only used with classes', 'They cannot be overloaded', 'They must specify all types at compile time'], ans:0},
+    {q:'Given the following code: void swap(int* x, int* y) { int temp = *x; *x = *y; *y = temp; } int main() { int a = 2, b = 8; swap(&a, &b); printf("%d %d", a, b); } What is the output?', opts:['8 2', '2 8', '2 2', '8 8'], ans:0},
+    {q:'Which of the following C/C++ statements correctly assigns the value of variable b to variable a?', opts:['a = &b;', 'a == b;', 'a = b;', 'a := b;'], ans:2},
+    {q:'How do you perform an explicit type cast from double to int in C++?', opts:['int x = double(y);', 'int x = (int)y;', 'All of the others', 'int x = static_cast<int>(y);'], ans:2},
+    {q:'What is the result of the following C/C++ expression? int a = 5; int b = 2; int c = a / b;', opts:['c is 2.5', 'c is 2', 'c is 3', 'Compilation error'], ans:1},
+    {q:'Which operator is used to perform integer division in C/C++?', opts:['/', '%', '//', 'div'], ans:0},
+    {q:'What is the result of the following C/C++ expression? int a = 5; int b = 2; int c = a % b;', opts:['c is 1', 'c is 2', 'c is 0', 'Compilation error'], ans:0},
+    {q:'What will be the output of the following C code snippet? #include <stdio.h> int main() { int a = 5; int b = ++a; printf("%d %d", a, b); return 0; }', opts:['5 5', '5 6', '6 6', '6 5'], ans:2},
+    {q:'What is the result of the following C++ code snippet? #include <iostream> using namespace std; int main() { int a = 5; int b = 2; cout << float(a)/b; return 0; }', opts:['1', '2', '2.5', '3', 'Compilation Error'], ans:2},
+    {q:'What will be the output of the following code snippet? int x = 10; if (x > 5) x = x + 2; else x = x - 2; printf("%d", x);', opts:['12', '8', '10', '5'], ans:0},
+    {q:'What will be the output of the following code snippet? int x = 3; switch(x) { case 1: printf("One"); break; case 2: printf("Two"); break; case 3: printf("Three"); break; default: printf("Other"); }', opts:['Three', 'One', 'Two', 'Other'], ans:0},
+    {q:'What will be the output of the following code snippet? int i = 0; while (i++ < 3) { printf("%d ", i); }', opts:['1 2 3', '0 1 2', '1 2 3 4', '0 1 2 3'], ans:0},
+    {q:'What will be the output of the following C++ code snippet? #include <iostream> using namespace std; int main() { for(int i = 0; i < 3; i++) { if(i == 1) continue; cout << i; } return 0; }', opts:['0 1 2', '0 2', '0 1', '1 2'], ans:1},
+    {q:'What will be the output of the following program? #include <iostream> using namespace std; class Point { public: int x; Point(int v): x(v) {} }; int main() { Point p(10); Point *ptr = &p; ptr->x += 5; cout << p.x; return 0; }', opts:['10', '15', '5', 'Compilation error'], ans:1},
+    {q:'Which access specifier allows derived classes to access base class members while restricting access from outside the class hierarchy?', opts:['public', 'private', 'protected', 'friend'], ans:2},
+    {q:'What will be the output of the following program? class Number { int *p; public: Number(int v){p=new int(v);} Number(const Number &n){p=new int(*n.p);} void set(int v){*p=v;} int get() const {return *p;} }; int main(){Number n1(5); Number n2=n1; n2.set(10); cout<<n1.get()<<" "<<n2.get(); return 0;}', opts:['10 10', '5 10', '10 5', 'Compilation error'], ans:1},
+    {q:'What will be the output of the following program? class Array { int arr[3]; public: Array(){arr[0]=1;arr[1]=2;arr[2]=3;} int& operator[](int idx){return arr[idx];} }; int main(){Array a; a[1]=5; cout<<a[1]; return 0;}', opts:['2', '3', '5', 'Compilation error'], ans:2},
+    {q:'What will be the output of the following program? class P { protected: int x = 10; }; class Q : public P { public: int getX() { return x; } }; int main() { Q q; cout << q.getX(); return 0; }', opts:['0', '10', 'Compilation error', 'Runtime error'], ans:1},
+    {q:'What does the this pointer represent in a C++ class\'s member function?', opts:['It points to the base class object', 'It points to the current object invoking the member function', 'It points to the next object in memory', 'It points to the function itself'], ans:1},
+    {q:'How do you access a member function drive using a pointer carPtr to an object of class Car?', opts:['carPtr.drive();', 'carPtr->drive();', '(*carPtr).drive();', 'All of the others'], ans:3},
+    {q:'What will be the result of compiling the following program? #include <iostream> using namespace std; class AB { virtual void f() = 0; }; int main() { AB a; return 0; }', opts:['Prints nothing', 'Compilation error', 'Runtime error', 'Undefined behavior'], ans:1},
+    {q:'What will be the output of the following program? class A { public: A(){cout<<"A";} ~A(){cout<<"a";} }; class B : public A { public: B(){cout<<"B";} ~B(){cout<<"b";} }; int main(){B b; return 0;}', opts:['ABba', 'BAab', 'AbBa', 'Compilation error'], ans:0},
+    {q:'What is the purpose of a destructor in a C++ class?', opts:['To initialize object attributes', 'To deallocate resources and perform cleanup when an object is destroyed', 'To overload operators', 'To copy objects'], ans:1},
+    {q:'Which of the following is true about comments in C/C++?', opts:['Comments are executed by the compiler.', 'Comments are used to document and enhance code readability.', 'Comments can only be single-line.', 'Comments must be used with a semicolon.'], ans:1},
+    {q:'Which of the following best defines a computer program?', opts:['A set of hardware instructions', 'A combination of data and instructions designed to solve a problem', 'A type of computer virus', 'A collection of unrelated commands'], ans:1},
+    {q:'What is the primary purpose of a compiler in C/C++ programming?', opts:['To execute the program', 'To translate high-level code into machine code', 'To manage memory allocation', 'To provide a user interface'], ans:1},
+    {q:'Which of the following correctly defines an enumeration for the days of the week in C/C++?', opts:['enum Days { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days = { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days; Days { Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday };', 'enum Days (Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday);'], ans:0},
+    {q:'Which of the following is true about C++ std::string compared to C-style strings?', opts:['std::string automatically manages memory for string operations.', 'C-style strings are objects with member functions.', 'std::string requires manual handling of the null terminator.', 'C-style strings support operator overloading for concatenation.'], ans:0},
+    {q:'How do you access the third element of an array named numbers?', opts:['numbers(3)', 'numbers[2]', 'numbers[3]', 'numbers{3}'], ans:1},
+    {q:'Which of the following is a valid way to declare a structure in C/C++?', opts:['struct Person { int age; char name[50]; };', 'struct Person { age int; name char[50]; };', 'struct Person { int age; string name; }', 'All of the others'], ans:0},
+    {q:'In C/C++, to access the name member of a structure variable Student s, which syntax is correct?', opts:['s.name', 's->name', 's:name', 's@name'], ans:0},
+    {q:'What is the output of the following C++ code snippet? struct Point { int x; int y; }; int main() { Point p1 = {10, 20}; Point p2; p2 = p1; cout << p2.x << " " << p2.y; return 0; }', opts:['10 20', '0 0', 'p1.x p1.y', 'Compilation Error'], ans:0},
+    {q:'Consider the following code: int a[] = {10, 20, 30, 40}; int *p = a; printf("%d", *(p + 3)); What is the output?', opts:['40', '10', '20', '30'], ans:0},
+    {q:'What will be the output of the following C++ code snippet? string str1 = "Hello"; string str2 = "World"; string str3 = str1 + " " + str2; cout << str3;', opts:['HelloWorld', 'Hello World', 'Hello + World', 'World Hello'], ans:1},
+    {q:'Which header is required for std::thread?', opts:['<thread>', '<mutex>', '<future>', '<condition_variable>'], ans:0},
+    {q:'Which class can both read and write files?', opts:['std::fstream', 'std::ifstream', 'std::ofstream', 'std::file'], ans:0},
+    {q:'What will be the output of the following code? int ia[] = {1,3,2,5,7}; vector<int> v1(ia, ia+3); sum=0; for(it=v1.begin();it!=v1.end();++it) sum+=*it; cout<<sum/v1.size()<<" ";', opts:['2', '6', '2.75', 'The code snippet has an execution error.'], ans:0},
+    {q:'What are the three main components of the C++ Standard Template Library (STL)?', opts:['Containers, Classes, Inheritance', 'Containers, Algorithms, Iterators', 'Functions, Pointers, Templates', 'Threads, Mutexes, Streams'], ans:1},
+    {q:'Which of the following correctly declares an iterator for a map<string, int>?', opts:['map<string, int>::iterator it;', 'iterator<map<string, int>> it;', 'map::iterator<string, int> it;', 'it map<string, int>::iterator;'], ans:0},
+    {q:'What will be the output of the following C code snippet? int factorial(int n) { if(n<=1) return 1; else return n*factorial(n-1); } int main() { printf("%d", factorial(4)); return 0; }', opts:['4', '24', '12', '1'], ans:1},
+    {q:'Which of the following is a value-returning function in C++?', opts:['void display(int a) { cout << a; }', 'int add(int a, int b) { return a + b; }', 'int main() { // code }', 'bool check(int a) { // no return statement }'], ans:1},
+    {q:'What is the purpose of a function prototype in C/C++?', opts:['To define the body of the function', 'To declare the function before its actual definition', 'To call the function', 'To overload the function'], ans:1},
+    {q:'How do you correctly define a template function in C++ that returns the maximum of two values?', opts:['template <typename T> T max(T a, T b) { return (a > b) ? a : b; }', 'template <class T> T max(T a, T b) { return (a > b) ? a : b; }', 'template <T> T max(T a, T b) { return (a > b) ? a : b; }', 'All of the others'], ans:3},
+    {q:'What does the realloc function do in C/C++?', opts:['Allocates new memory', 'Frees allocated memory', 'Resizes previously allocated memory', 'Copies memory from one location to another'], ans:2},
+    {q:'Which of the following correctly uses the pow function from the <cmath> library?', opts:['pow(2, 3)', 'pow(2.0, 3.0)', 'pow(x, y) where x and y are integers', 'All of the others'], ans:3},
+    {q:'How do you pass a variable by reference to a function in C++?', opts:['func(int a)', 'func(int &a)', 'func(int* a)', 'func(&a)'], ans:1},
+    {q:'In C/C++, which keyword is used to declare a function that does NOT return a value?', opts:['void', 'int', 'double', 'char'], ans:0},
+    {q:'What is the correct syntax to declare an integer variable named count in C++?', opts:['int count;', 'integer count;', 'num count;', 'count int;'], ans:0},
+    {q:'What is the purpose of the const keyword when declaring a variable in C/C++?', opts:['To allow the variable to be modified', 'To prevent the variable from being modified', 'To declare a pointer', 'To allocate dynamic memory'], ans:1},
+    {q:'How to compare the values of two variables, a and b, in C++?', opts:['a = &b;', 'a == b;', 'a = b;', 'a := b;'], ans:1},
+    {q:'Which of the following C/C++ operators has the highest precedence?', opts:['&&', '||', '*', '+', '=', '?:'], ans:2},
+    {q:'Which of the following C/C++ operators has the lowest precedence?', opts:['&&', '||', '*', '+', '=', '?:'], ans:4},
+    {q:'Which of the following C++ operators is used for bitwise OR operator?', opts:['||', '|', '&&', '&', '^', '!'], ans:1},
+    {q:'What does the following C++ expression evaluate to? int a = 3; int b = 4; bool result = (a < b) && (a == 3);', opts:['result is true', 'result is false', 'result is 1', 'result is 0', 'All of the others'], ans:4},
+    {q:'What is the result of the following C++ expression? int x = 4; int y = 2; bool result = (x > y) ? true : false; cout << result;', opts:['TRUE', 'FALSE', '1', '0', 'All of the others'], ans:2},
+    {q:'Which operator is used for multi-way selection in C/C++?', opts:['if', 'switch', 'case', 'else'], ans:1},
+    {q:'What will be the output of the following C code snippet? int x = 10; if(x>5) { if(x>15) printf("High"); else printf("Medium"); } else printf("Low");', opts:['High', 'Medium', 'Low', 'No output'], ans:1},
+    {q:'Which of the following keywords is used to terminate a loop in C/C++?', opts:['exit', 'stop', 'break', 'terminate'], ans:2},
+    {q:'Which loop structure ensures that the loop body is executed at least once?', opts:['for loop', 'while loop', 'do...while loop', 'foreach loop'], ans:2},
+    {q:'Which loop construct is particularly useful when the number of iterations is determined by user input during the loop\'s execution?', opts:['for loop', 'while loop', 'do-while loop', 'foreach loop'], ans:2},
+    {q:'Which of the following control structures is used to execute a block of code multiple times based on a condition?', opts:['if', 'switch', 'for', 'break'], ans:2},
+    {q:'What is the primary difference between procedural programming and object-oriented programming (OOP)?', opts:['Procedural programming uses classes, while OOP does not', 'OOP focuses on objects combining data and functions, whereas procedural programming focuses on a sequence of actions', 'Procedural programming is more modular than OOP', 'OOP cannot reuse code, unlike procedural programming'], ans:1},
+    {q:'What will be the output of the following program? class A { public: virtual void f(){cout<<"A";} }; class B:public A { public: void f() override{cout<<"B";} }; class C:public B { public: void f() override{cout<<"C";} }; int main(){A *p=new C(); p->f(); return 0;}', opts:['A', 'B', 'C', 'Compilation error'], ans:2},
+    {q:'What will be the output of the following program? class D { double v; public: D(double d):v(d){} operator int(){return (int)v;} }; int main(){D x(3.9); int y=x; cout<<y; return 0;}', opts:['3', '4', 'Compilation error', 'Runtime error'], ans:0},
+    {q:'How do you declare an object car1 of class Car in C++?', opts:['Car car1;', 'object car1 = Car();', 'Car car1 = new Car();', 'Car car1[];'], ans:0},
+    {q:'Which of the following is true about member functions marked as const?', opts:['They can modify any member variables', 'They cannot modify any member variables', 'They must return an integer', 'They can only be called by static objects'], ans:1},
+    {q:'What will be the output of the following program? class Inner{public: int v; Inner(int x):v(x){}}; class Outer{Inner i; public: Outer(int x):i(x){} int get() const{return i.v;}}; int main(){Outer o(7); cout<<o.get(); return 0;}', opts:['0', '7', 'Compilation error', 'Runtime error'], ans:1},
+    {q:'Which access specifier allows class members to be accessible from outside the class?', opts:['private', 'protected', 'public', 'static'], ans:2},
+    {q:'What will be the output of the following program? class Counter{public: static int count; Counter(){count++;} static void printCount(){cout<<count;}}; int Counter::count=0; int main(){Counter c1; Counter c2; Counter::printCount(); return 0;}', opts:['1', '2', '0', 'Compilation error'], ans:1},
+    {q:'What is the primary purpose of a copy constructor in a C++ class?', opts:['To allocate memory dynamically', 'To initialize an object by copying data from another object of the same class', 'To delete an object', 'To overload the assignment operator'], ans:1},
+    {q:'What will be the output of the following program? class Box{private: int length; public: Box(int l):length(l){} friend void increase(Box &b); int getLength(){return length;}}; void increase(Box &b){b.length++;} int main(){Box b(5); increase(b); cout<<b.getLength(); return 0;}', opts:['5', '6', '0', 'Compilation error'], ans:1},
+    {q:'What will be the output of the following program? class InlineTest{public: inline int add(int a, int b){return a+b;}}; int main(){InlineTest it; cout<<it.add(2,3); return 0;}', opts:['2', '3', '5', 'Compilation error'], ans:2},
+    {q:'In multiple inheritance, what does the syntax \'class A : public B, public C\' indicate?', opts:['A inherits from both B and C', 'A is a friend class of B and C', 'A is an abstract class', 'A overrides all functions from B'], ans:0}
+    ]
   }
 ]
 
@@ -3580,6 +3731,7 @@ const COURSE_META = [
   {code:'ECO102', color:'#10b981', label:'<svg class="ic"><use href="#ic-chart-bar"></use></svg> ECO102'},
   {code:'SDI101', color:'#f97316', label:'<svg class="ic"><use href="#ic-cpu"></use></svg> SDI101'},
   {code:'CEA201', color:'#ec4899', label:'<svg class="ic"><use href="#ic-layers"></use></svg> CEA201'},
+  {code:'PRF193', color:'#22c55e', label:'<svg class="ic"><use href="#ic-code"></use></svg> PRF193'},
 ];
 
 let currentUser = null;
