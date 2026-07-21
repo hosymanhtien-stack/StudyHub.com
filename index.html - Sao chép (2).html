@@ -5430,7 +5430,7 @@ function renderLearnQ(){
       <div class="q-text">${q.q}</div>
       <div class="opts" id="optsContainer">
         ${q.opts.map((o,i)=>`
-        <button class="opt-btn" onclick="checkLearnQ(${i},${q.ans},${qIdx},this)">
+        <button class="opt-btn" onclick="checkLearnQ(${i},${JSON.stringify(q.ans)},${qIdx},this)">
           <span class="opt-lbl">${labels[i]}</span>
           <span>${o}</span>
         </button>`).join('')}
@@ -5453,12 +5453,18 @@ function checkLearnQ(sel, correct, qIdx, btn){
   const labels=['A','B','C','D','E'];
   const fb=document.getElementById('fb'), fbT=document.getElementById('fbTitle'), fbB=document.getElementById('fbBody');
 
-  lrn.seen.add(qIdx); // đã hoàn thành chấm điểm câu này — dùng cho thanh "Tiến độ"
+  lrn.seen.add(qIdx);
 
-  // Hỗ trợ câu nhiều đáp án đúng (ans2)
+  // Hỗ trợ câu nhiều đáp án đúng: ans có thể là number, array, hoặc có trường ans2
   const curQ = lrn.allQs[qIdx];
-  const ans2 = (curQ.ans2 !== undefined) ? curQ.ans2 : null;
-  const isCorrect = (sel === correct) || (ans2 !== null && sel === ans2);
+  // Xây dựng danh sách tất cả đáp án đúng
+  let correctList = [];
+  if(Array.isArray(correct)) correctList = correct;
+  else correctList = [correct];
+  if(curQ.ans2 !== undefined) correctList.push(curQ.ans2);
+  // Loại trùng
+  correctList = [...new Set(correctList)];
+  const isCorrect = correctList.includes(sel);
 
   if(isCorrect){
     lrn.totalCorrect++;
@@ -5486,18 +5492,18 @@ function checkLearnQ(sel, correct, qIdx, btn){
     }
     btn.classList.add('wrong-opt');
     const allBtns = document.querySelectorAll('.opt-btn');
-    allBtns[correct].classList.add('show-ans');
-    if(ans2 !== null) allBtns[ans2].classList.add('show-ans');
+    // Highlight tất cả đáp án đúng màu xanh
+    correctList.forEach(ci => { if(allBtns[ci]) allBtns[ci].classList.add('show-ans'); });
     fb.className='feedback-box show-err';
     fbT.className='fb-title err'; fbT.innerHTML='<svg class="ic"><use href="#ic-x-circle"></use></svg> Chưa đúng!';
-    const ans2Text = (ans2 !== null) ? ` và <strong style="color:var(--green)">${labels[ans2]}. ${curQ.opts[ans2]}</strong>` : '';
-    fbB.innerHTML=`Đáp án đúng: <strong style="color:var(--green)">${labels[correct]}. ${curQ.opts[correct]}</strong>${ans2Text} — Sẽ được ôn lại!`;
+    const correctText = correctList.map(ci => `<strong style="color:var(--green)">${labels[ci]}. ${curQ.opts[ci]}</strong>`).join(' và ');
+    fbB.innerHTML=`Đáp án đúng: ${correctText} — Sẽ được ôn lại!`;
   }
   // Show explanation if available
   const expQ = lrn.allQs[qIdx];
   if(expQ.exp){
     const expDiv = document.createElement('div');
-    expDiv.className = 'exp-box ' + (sel===correct ? 'exp-ok' : 'exp-err');
+    expDiv.className = 'exp-box ' + (isCorrect ? 'exp-ok' : 'exp-err');
     const expHtml = expQ.exp.split('\n').join('<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
     expDiv.innerHTML = `<div class="exp-title ${sel===correct?'ok':'err'}"><svg class="ic"><use href="#ic-lightbulb"></use></svg> Giải thích</div><div class="exp-body">${expHtml}</div>`;
     document.getElementById('fb').after(expDiv);
