@@ -5439,8 +5439,8 @@ function renderLearnQ(){
       <div class="q-num" style="color:${phaseColor}">CÂU ${qInQueue}/${qTotal} · ${c.code}</div>
       <div class="q-text">${q.q}</div>
       <div class="opts" id="optsContainer">
-        ${q.opts.map((o,i)=>`
-        <button class="opt-btn" onclick="checkLearnQ(${i},${JSON.stringify(q.ans)},${qIdx},this)">
+        ${(Array.isArray(q.opts)?q.opts:Object.values(q.opts)).map((o,i)=>`
+        <button class="opt-btn" onclick="checkLearnQ(${i},${JSON.stringify(Array.isArray(q.ans)?q.ans.map(Number):[Number(q.ans)])},${qIdx},this)">
           <span class="opt-lbl">${labels[i]}</span>
           <span>${o}</span>
         </button>`).join('')}
@@ -5467,14 +5467,16 @@ function checkLearnQ(sel, correct, qIdx, btn){
 
   // Hỗ trợ câu nhiều đáp án đúng: ans có thể là number, array, hoặc có trường ans2
   const curQ = lrn.allQs[qIdx];
+  // Normalize opts: Firestore có thể trả về object {0:"A",1:"B"} thay vì array
+  const normalOpts = curQ ? (Array.isArray(curQ.opts) ? curQ.opts : Object.values(curQ.opts)) : [];
   // Xây dựng danh sách tất cả đáp án đúng
   let correctList = [];
-  if(Array.isArray(correct)) correctList = correct;
-  else correctList = [correct];
-  if(curQ.ans2 !== undefined) correctList.push(curQ.ans2);
+  if(Array.isArray(correct)) correctList = correct.map(x => Number(x));
+  else correctList = [Number(correct)];
+  if(curQ && curQ.ans2 !== undefined) correctList.push(Number(curQ.ans2));
   // Loại trùng
   correctList = [...new Set(correctList)];
-  const isCorrect = correctList.includes(sel);
+  const isCorrect = correctList.includes(Number(sel));
 
   if(isCorrect){
     lrn.totalCorrect++;
@@ -5485,7 +5487,7 @@ function checkLearnQ(sel, correct, qIdx, btn){
       lrn.mastered.add(qIdx);
     }
     correctList.forEach(ci => { const b = document.querySelectorAll('.opt-btn')[ci]; if(b) b.classList.add('correct-opt'); });
-    btn.classList.add('correct-opt'); // btn hiện tại (có thể trùng)
+    if(!correctList.includes(Number(sel))) btn.classList.add('correct-opt');
     fb.className='feedback-box show-ok';
     fbT.className='fb-title ok';
     const isMastered = lrn.mastered.has(qIdx);
@@ -5508,7 +5510,7 @@ function checkLearnQ(sel, correct, qIdx, btn){
     fb.className='feedback-box show-err';
     fbT.className='fb-title err'; fbT.innerHTML='<svg class="ic"><use href="#ic-x-circle"></use></svg> Chưa đúng!';
     const correctText = correctList.map(ci => {
-      const optText = (curQ && curQ.opts && curQ.opts[ci] !== undefined) ? curQ.opts[ci] : '?';
+      const optText = normalOpts[ci] !== undefined ? normalOpts[ci] : '?';
       return `<strong style="color:var(--green)">${labels[ci]}. ${optText}</strong>`;
     }).join(' và ');
     fbB.innerHTML=`Đáp án đúng: ${correctText} — Sẽ được ôn lại!`;
