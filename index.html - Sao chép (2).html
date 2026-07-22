@@ -5468,11 +5468,11 @@ function checkLearnQ(sel, correct, qIdx, btn){
   // Hỗ trợ câu nhiều đáp án đúng: ans có thể là number, array, hoặc có trường ans2
   const curQ = lrn.allQs[qIdx];
   // DEBUG: log để xem cấu trúc thực tế từ Firestore
-  console.log('[DEBUG] qIdx=', qIdx, 'curQ=', curQ, 'correct=', correct, 'typeof correct=', typeof correct);
-  if(curQ) console.log('[DEBUG] curQ.ans=', curQ.ans, 'typeof curQ.ans=', typeof curQ.ans, 'curQ.opts=', curQ.opts, 'Array.isArray(curQ.opts)=', Array.isArray(curQ.opts));
+  // DEBUG: log toàn bộ curQ để xem cấu trúc Firestore
+  console.log('[DEBUG] curQ full object:', JSON.stringify(curQ));
+  console.log('[DEBUG] Object.keys(curQ):', curQ ? Object.keys(curQ) : 'null');
   // Normalize opts: Firestore có thể trả về object {0:"A",1:"B"} thay vì array
   const normalOpts = curQ ? (Array.isArray(curQ.opts) ? curQ.opts : Object.values(curQ.opts)) : [];
-  console.log('[DEBUG] normalOpts=', normalOpts, 'correctList will be built from correct=', correct);
   // Xây dựng danh sách tất cả đáp án đúng
   let correctList = [];
   if(Array.isArray(correct)) correctList = correct.map(x => Number(x));
