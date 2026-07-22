@@ -235,10 +235,13 @@ body::after{content:'';position:fixed;inset:0;background-image:url("data:image/s
 .card-inner{position:relative;width:100%;min-height:280px;transform-style:preserve-3d;transition:transform .55s cubic-bezier(.4,0,.2,1);cursor:pointer}
 .card-inner.flipped{transform:rotateY(180deg)}
 .card-face{position:absolute;inset:0;backface-visibility:hidden;border-radius:20px;display:flex;align-items:center;justify-content:center;padding:36px 40px;border:1.5px solid var(--border);min-height:280px}
-.card-front{background:var(--card)}
+.card-front{background:var(--card);padding:24px 28px;overflow-y:auto}
 .card-back{background:var(--card2);transform:rotateY(180deg);flex-direction:column;gap:12px}
 .card-label{position:absolute;top:18px;left:22px;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted2)}
-.card-q{font-size:18px;font-weight:600;line-height:1.6;text-align:center;color:var(--text)}
+.card-q{font-size:17px;font-weight:600;line-height:1.6;text-align:center;color:var(--text);margin-bottom:14px}
+.fc-opts{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:8px}
+.fc-opt{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;text-align:left;color:var(--text);display:flex;gap:8px;align-items:flex-start;line-height:1.45}
+.fc-opt-lbl{font-weight:700;color:var(--muted);min-width:20px;flex-shrink:0}
 .card-a{font-size:16px;font-weight:600;line-height:1.6;text-align:center;color:var(--green)}
 .card-hint{font-size:12px;color:var(--muted);text-align:center}
 .card-flip-hint{text-align:center;font-size:13px;color:var(--muted);margin-bottom:20px}
@@ -5002,8 +5005,11 @@ function renderFC(){
   const total = fc.qs.length;
   const q = fc.qs[fc.idx];
   const pct = total>0 ? (fc.idx/total*100).toFixed(1) : 0;
-  const ans = q.opts[q.ans];
   const labels = ['A','B','C','D','E'];
+  // Xây dựng danh sách đáp án đúng (hỗ trợ ans là number hoặc array)
+  const ansIdxList = Array.isArray(q.ans) ? q.ans : [q.ans];
+  if(q.ans2 !== undefined && !ansIdxList.includes(q.ans2)) ansIdxList.push(q.ans2);
+  const ansText = ansIdxList.map(i => `${labels[i]}. ${q.opts[i]}`).join(' và ');
 
   document.getElementById('mainArea').innerHTML = `
   <div class="flashcard-view">
@@ -5019,10 +5025,14 @@ function renderFC(){
         <div class="card-face card-front">
           <span class="card-label">Câu hỏi — Nhấn để lật</span>
           <div class="card-q">${q.q}</div>
+          <div class="fc-opts">
+            ${q.opts.filter(o=>o).map((o,i)=>`
+            <div class="fc-opt"><span class="fc-opt-lbl">${labels[i]}.</span><span>${o}</span></div>`).join('')}
+          </div>
         </div>
         <div class="card-face card-back">
           <span class="card-label">Đáp án</span>
-          <div class="card-a">${labels[q.ans]}. ${ans}</div>
+          <div class="card-a">${ansText}</div>
           <div class="card-hint">Đây là đáp án đúng</div>
         </div>
       </div>
@@ -5474,7 +5484,8 @@ function checkLearnQ(sel, correct, qIdx, btn){
     if(lrn.streaks[qIdx] >= LRN_MASTER_NEED){
       lrn.mastered.add(qIdx);
     }
-    btn.classList.add('correct-opt');
+    correctList.forEach(ci => { const b = document.querySelectorAll('.opt-btn')[ci]; if(b) b.classList.add('correct-opt'); });
+    btn.classList.add('correct-opt'); // btn hiện tại (có thể trùng)
     fb.className='feedback-box show-ok';
     fbT.className='fb-title ok';
     const isMastered = lrn.mastered.has(qIdx);
@@ -5496,7 +5507,10 @@ function checkLearnQ(sel, correct, qIdx, btn){
     correctList.forEach(ci => { if(allBtns[ci]) allBtns[ci].classList.add('show-ans'); });
     fb.className='feedback-box show-err';
     fbT.className='fb-title err'; fbT.innerHTML='<svg class="ic"><use href="#ic-x-circle"></use></svg> Chưa đúng!';
-    const correctText = correctList.map(ci => `<strong style="color:var(--green)">${labels[ci]}. ${curQ.opts[ci]}</strong>`).join(' và ');
+    const correctText = correctList.map(ci => {
+      const optText = (curQ && curQ.opts && curQ.opts[ci] !== undefined) ? curQ.opts[ci] : '?';
+      return `<strong style="color:var(--green)">${labels[ci]}. ${optText}</strong>`;
+    }).join(' và ');
     fbB.innerHTML=`Đáp án đúng: ${correctText} — Sẽ được ôn lại!`;
   }
   // Show explanation if available
