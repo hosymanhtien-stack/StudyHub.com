@@ -5471,10 +5471,10 @@ function checkLearnQ(sel, correct, qIdx, btn){
   // Normalize opts: Firestore có thể trả về object {0:"A",1:"B"} thay vì array
   const normalOpts = curQ ? (Array.isArray(curQ.opts) ? curQ.opts : Object.values(curQ.opts)) : [];
   
-  // Nếu ans = -1: câu multi-answer chưa có đáp án lưu trong Firestore
-  // → Tính tất cả đáp án đều đúng (người dùng có thể tiếp tục) và hiển thị thông báo
+  // Nếu ans=-1 hoặc uncertain:true → câu chưa có đáp án xác định trong Firestore
   const isMultiNoAns = (Array.isArray(correct) && correct.length === 1 && correct[0] === -1)
-                    || (correct === -1) || (correct === '-1');
+                    || (correct === -1) || (correct === '-1')
+                    || (curQ && curQ.uncertain === true);
   // Xây dựng danh sách tất cả đáp án đúng
   let correctList = [];
   if(isMultiNoAns){
@@ -5486,7 +5486,8 @@ function checkLearnQ(sel, correct, qIdx, btn){
     if(curQ && curQ.ans2 !== undefined) correctList.push(Number(curQ.ans2));
     correctList = [...new Set(correctList)];
   }
-  const isCorrect = isMultiNoAns ? true : correctList.includes(Number(sel));
+  // ans=-1: câu chưa có đáp án lưu → tính là sai nhưng hiển thị thông báo riêng
+  const isCorrect = isMultiNoAns ? false : correctList.includes(Number(sel));
 
   if(isCorrect){
     lrn.totalCorrect++;
@@ -5516,10 +5517,11 @@ function checkLearnQ(sel, correct, qIdx, btn){
     btn.classList.add('wrong-opt');
     const allBtns = document.querySelectorAll('.opt-btn');
     if(isMultiNoAns){
-      // Câu multi-answer chưa có đáp án lưu → báo người học tự kiểm tra
+      // Câu multi-answer chưa có đáp án → highlight btn đã chọn đỏ, báo thiếu đáp án
+      btn.classList.add('wrong-opt');
       fb.className='feedback-box show-err';
       fbT.className='fb-title err'; fbT.innerHTML='<svg class="ic"><use href="#ic-alert-triangle"></use></svg> Câu chọn nhiều đáp án';
-      fbB.innerHTML='Câu này có nhiều đáp án đúng. Vui lòng đối chiếu với tài liệu để xác nhận đáp án chính xác.';
+      fbB.innerHTML='⚠️ Câu này có đánh dấu <strong>chưa xác định đáp án</strong>. Vui lòng đối chiếu tài liệu gốc để xác nhận. (Admin: cập nhật field <code>ans</code> trong Firestore)';
     } else {
       // Highlight tất cả đáp án đúng màu xanh
       correctList.forEach(ci => { if(allBtns[ci]) allBtns[ci].classList.add('show-ans'); });
